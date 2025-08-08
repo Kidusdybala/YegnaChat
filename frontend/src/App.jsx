@@ -9,7 +9,7 @@ import ChatPage from "./Pages/ChatPage";
 import { Toaster, toast } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query"; // Add this import
 import { axiosInstance } from "./lib/axios"; // Fix this import
-
+import PageLoader from "./components/PageLoader";
 const App = () => {
   const {data, isLoading, isError} = useQuery({
     queryKey: ["authUser"],
@@ -26,12 +26,12 @@ const App = () => {
   
   const authUser = data?.user;
   
-  if (isLoading) return <div className="loading">Loading...</div>;
+  if (isLoading) return <PageLoader />;
   if (isError) return <div className="error">Error loading user data</div>;
   
   return (
     <div className="h-screen" data-theme="night">
-      <button onClick={()=> toast.success("Hello world!")}> Toast </button>
+    
       <Routes>
         <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
         <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
