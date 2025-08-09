@@ -24,19 +24,7 @@ const userSchema = new mongoose.Schema(
     },
     profilePic: {
       type: String,
-      default: "",
-    },
-    nativeLanguage: {
-      type: String,
-      default: "",
-    },
-    learningLanguage: {
-      type: String,
-      default: "",
-    },
-    location: {
-      type: String,
-      default: "",
+      default: null,
     },
     isOnboarded: {
       type: Boolean,

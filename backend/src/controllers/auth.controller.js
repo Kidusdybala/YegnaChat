@@ -41,7 +41,7 @@ export async function Login(req, res) {
 }
 export async function Signup(req, res) {
   // Remove nativeLanguage and learningLanguage from destructuring
-  const { email, password, fullName, bio, profilePic, location } = req.body;
+  const { email, password, fullName, bio } = req.body;
 
   try {
     // Validate required fields
@@ -81,33 +81,27 @@ export async function Signup(req, res) {
       return res.status(409).json({ message: "Email already in use" });
     }
 
-    // Generate random avatar URL with idx
-    const idx = Math.floor(Math.random() * 100) + 1;
-    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
-
-    // Create new user with all fields (optional fields use defaults if not provided)
-    // Create new user without language fields
+    // Create new user with empty profile picture
     const user = new User({
       email,
       password,
       fullName,
       bio: bio || "",
-      profilePic: profilePic || randomAvatar,
-      location: location || "",
-    
+      profilePic: "", // Empty profile picture by default
     });
+    
     try {
       await upsertStreamUser({
         id: user._id.toString(),
         name: user.fullName,
-        image: user.profilePic || "",
+        image: "", // Empty image for Stream
       });
       console.log(`user created successfully ${user.fullName}`);
- 
     }
     catch (error) {
       console.error(`Error upserting user ${user._id}:`, error);
     };
+    
     await user.save();
     console.log("User saved to MongoDB");
 
@@ -129,10 +123,6 @@ export async function Signup(req, res) {
         fullName: user.fullName,
         bio: user.bio,
         profilePic: user.profilePic,
-        location: user.location,
-        // Remove these two lines:
-        // nativeLanguage: user.nativeLanguage,
-        // learningLanguage: user.learningLanguage,
       } 
     });
   } catch (error) {
@@ -145,23 +135,15 @@ export async function onboard(req, res) {
     const {
       fullName,
       bio,
-      // Remove these two lines:
-      // learningLanguage,
-      // nativeLanguage,
-      location,
     } = req.body;
 
     // Update validation to not require language fields
-    if (!fullName || !bio || !location) {
+    if (!fullName || !bio) {
       return res.status(400).json({
         message: "All fields are required",
         missingFields: [
           !fullName && "fullName",
           !bio && "bio",
-          // Remove these two lines:
-          // !learningLanguage && "learningLanguage",
-          // !nativeLanguage && "nativeLanguage",
-          !location && "location",
         ].filter(Boolean),
       });
     }

@@ -11,7 +11,6 @@ export async function getRecommendedUsers(req, res) {
         { _id: { $ne: currentUserId } }, 
         { _id: { $nin: currentUser.friends } }, 
         { _id: { $nin: currentUser.blockedUsers } },
-        { isOnboarded: true },
       ],
     });
     res.status(200).json(recommendedUsers);

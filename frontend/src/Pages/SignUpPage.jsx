@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axiosInstance from '../lib/axios';
+import { Link } from 'react-router-dom';
+import useAuthUser from '../hooks/useAuthUser';
 import { toast } from 'react-hot-toast';
 
 export const SignUpPage = () => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { signup, isSignupPending, signupError } = useAuthUser();
   const [formErrors, setFormErrors] = useState({});
   const [signupData, setSignupData] = useState({
     fullName: '',
@@ -44,33 +42,18 @@ export const SignUpPage = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const { mutate, isPending, error } = useMutation({
-    mutationFn: async () => {
-      // Validate form before submitting
-      if (!validateForm()) {
-        throw new Error('Please fix the form errors');
-      }
-      
-      const { confirmPassword, ...dataToSubmit } = signupData;
-      const response = await axiosInstance.post('/auth/signup', dataToSubmit);
-      return response.data;
-    },
-    onSuccess: (data) => {
-      toast.success('User created successfully!');
-      queryClient.invalidateQueries({ queryKey: ['authUser'] }); // Fixed queryKey name
-      setTimeout(() => {
-        navigate('/login');
-      }, 1500);
-    },
-    onError: (error) => {
-      console.error('Signup error:', error);
-      toast.error(error.response?.data?.message || 'Failed to create account');
-    }
-  });
-
   const handleSignup = async (e) => {
     e.preventDefault();
-    mutate();
+    
+    // Validate form before submitting
+    if (!validateForm()) {
+      toast.error('Please fix the form errors');
+      return;
+    }
+    
+    // Remove confirmPassword before sending to API
+    const { confirmPassword, ...dataToSubmit } = signupData;
+    signup(dataToSubmit);
   };
 
   return (
@@ -90,9 +73,9 @@ export const SignUpPage = () => {
           </div>
 
           {/* ERROR MESSAGE IF ANY */}
-          {error && error.response?.data?.message && (
+          {signupError && signupError.response?.data?.message && (
             <div className="alert alert-error mb-4">
-              <span>{error.response.data.message}</span>
+              <span>{signupError.response.data.message}</span>
             </div>
           )}
 
@@ -114,7 +97,7 @@ export const SignUpPage = () => {
                     </label>
                     <input
                       type="text"
-                      placeholder="John Doe"
+                      placeholder="abebe"
                       className={`input input-bordered w-full ${formErrors.fullName ? 'input-error' : ''}`}
                       value={signupData.fullName}
                       onChange={(e) =>
@@ -134,7 +117,7 @@ export const SignUpPage = () => {
                     </label>
                     <input
                       type="email"
-                      placeholder="john@gmail.com"
+                      placeholder="abebe@gmail.com"
                       className={`input input-bordered w-full ${formErrors.email ? 'input-error' : ''}`}
                       value={signupData.email}
                       onChange={(e) =>
@@ -206,7 +189,7 @@ export const SignUpPage = () => {
 
                 {/* SUBMIT BUTTON */}
                 <button className="btn btn-primary w-full" type="submit">
-                  {isPending ? (
+                  {isSignupPending ? (
                     <>
                       <span className="loading loading-spinner loading-xs"></span>
                       Loading...
