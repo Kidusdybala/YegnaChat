@@ -5,7 +5,15 @@ const apiKey = process.env.STREAM_API_KEY;
 const apiSecret = process.env.STREAM_API_SECRET;
 
 if (!apiKey || !apiSecret) {
-  console.error("API key and secret are required");
+  console.error(" Stream API key and secret are required");
+  console.error("Please set STREAM_API_KEY and STREAM_API_SECRET in your .env file");
+  throw new Error("Stream API credentials not configured");
+}
+
+// Validate API key format (Stream API keys are typically 12 characters)
+if (apiKey.length < 10) {
+  console.error(" Stream API key appears to be invalid (too short)");
+  throw new Error("Invalid Stream API key format");
 }
 
 // Use the correct class name
@@ -22,9 +30,13 @@ export const upsertStreamUser = async (userData) => {
 
 export const generateStreamToken = (userId) => {
   try {
-    return streamClient.createToken(userId);
+    const userIdStr = userId.toString();
+    console.log(`🎫 Generating token for user ID: ${userIdStr}`);
+    const token = streamClient.createToken(userIdStr);
+    console.log(` Token generated successfully for user: ${userIdStr}`);
+    return token;
   } catch (error) {
-    console.error("Error generating token:", error);
+    console.error(" Error generating token:", error);
     return null;
   }
 };

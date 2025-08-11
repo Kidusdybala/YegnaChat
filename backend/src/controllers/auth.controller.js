@@ -19,7 +19,7 @@ export async function Login(req, res) {
     }
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "ivalid email or password" });
+      return res.status(404).json({ message: "invalid email or password" });
     }
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
@@ -167,7 +167,7 @@ export async function onboard(req, res) {
       user: updatedUser,
     });
   } catch (error) {
-    console.error("Onboarding error:", error);
+    console.error("editprofile error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 }

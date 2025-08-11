@@ -83,7 +83,7 @@ export const LoginPage = () => {
                     </label>
                     <input
                       type="email"
-                      placeholder="john@gmail.com"
+                      placeholder="abebe@gmail.com"
                       className={`input input-bordered w-full ${formErrors.email ? 'input-error' : ''}`}
                       value={credentials.email}
                       onChange={(e) =>

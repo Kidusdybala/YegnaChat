@@ -4,14 +4,16 @@ import SignUpPage from "./Pages/SignUpPage";
 import LoginPage from "./Pages/LoginPage";
 import CallPage from "./Pages/CallPage";
 import NotificationsPage from "./Pages/NotificationsPage";
-import OnBoardingPage from "./Pages/OnBoardingPage";
+import EditProfile from "./Pages/EditProfile";
 import ChatPage from "./Pages/ChatPage";
 import FriendsPage from "./Pages/FriendsPage";
 import { Toaster } from "react-hot-toast";
 import PageLoader from "./components/PageLoader";
 import useAuthUser from "./hooks/useAuthUser";
 import Layout from "./components/Layout";
+import SettingsPage from "./Pages/SettingsPage";
 import ThemeSelector from "./components/ThemeSelector";
+import { Settings } from "lucide-react";
 
 const App = () => {
   const { authUser, isLoading, isError } = useAuthUser();
@@ -62,13 +64,12 @@ const App = () => {
             )
           }
         />
-
         <Route 
           path="/notifications" 
           element={
             authUser ? (
               <Layout showSidebar={true}>
-                <NotificationsPage /> {/* ✅ Correct usage */}
+                <NotificationsPage /> {/*  Correct usage */}
               </Layout>
             ) : (
               <Navigate to="/login" />
@@ -77,8 +78,8 @@ const App = () => {
         />
 
         <Route 
-          path="/onboarding" 
-          element={authUser ? <OnBoardingPage /> : <Navigate to="/login" />} 
+          path="/editprofile" 
+          element={authUser ? <EditProfile /> : <Navigate to="/login" />} 
         />
 
         <Route 
@@ -93,21 +94,25 @@ const App = () => {
             )
           }
         />
-
+        
+        <Route 
+          path="/chat/:chatId" 
+          element={
+            authUser ? (
+              <Layout showSidebar={true}>
+                <ChatPage />
+              </Layout>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
         <Route 
           path="/settings" 
           element={
             authUser ? (
               <Layout showSidebar={true}>
-                <div className="p-8">
-                  <h1 className="text-2xl font-bold mb-6">Settings</h1>
-                  <div className="card bg-base-200 shadow-xl">
-                    <div className="card-body">
-                      <h2 className="card-title mb-4">Theme Settings</h2>
-                      <ThemeSelector />
-                    </div>
-                  </div>
-                </div>
+                <SettingsPage/>
               </Layout>
             ) : (
               <Navigate to="/login" />

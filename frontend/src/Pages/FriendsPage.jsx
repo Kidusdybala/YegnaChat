@@ -3,8 +3,11 @@ import { userAPI } from '../lib/api';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { UserIcon, UserPlusIcon, UsersIcon, CheckIcon, XIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { chatAPI } from '../lib/api';
+import { Link } from 'react-router-dom';
+import { getProfilePictureUrl } from '../utils/imageUtils';
 
-// Add this at the top of the file, after the imports
 const FriendsPage = () => {
   const [activeTab, setActiveTab] = useState('requests');
   const [showCancelConfirm, setShowCancelConfirm] = useState(null);
@@ -20,13 +23,11 @@ const FriendsPage = () => {
     queryKey: ['outgoingRequests'],
     queryFn: userAPI.getOutgoingFriendRequests
   });
-
   // Fetch friends list
   const { data: friends, isLoading: isLoadingFriends, refetch: refetchFriends } = useQuery({
     queryKey: ['friends'],
     queryFn: userAPI.getFriendUsers
   });
-
   // Fetch suggested friends
   const { data: suggestedFriends, isLoading: isLoadingSuggestions, refetch: refetchSuggestions } = useQuery({
     queryKey: ['suggestedFriends'],
@@ -99,13 +100,12 @@ const FriendsPage = () => {
     return request ? request._id : null;
   };
 
-  // Add this in the Friend Requests Tab section
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Friends</h1>
       
       {/* Tabs */}
-      <div className="tabs tabs-boxed mb-6">
+      <div className="tabs tabs-boxed mb-4">
         <a 
           className={`tab ${activeTab === 'requests' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('requests')}
@@ -146,7 +146,17 @@ const FriendsPage = () => {
                   <div className="flex items-center gap-4">
                     <div className="avatar">
                       <div className="w-16 rounded-full">
-                        <img src={request.sender.profilePic} alt={request.sender.fullName} />
+                        {getProfilePictureUrl(request.sender) && (
+                          <img 
+                            src={getProfilePictureUrl(request.sender)} 
+                            alt={request.sender.fullName}
+                            className="rounded-full object-cover"
+                            onError={(e) => {
+                              console.warn('Profile picture failed to load for:', request.sender.fullName);
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                     <div>
@@ -186,7 +196,17 @@ const FriendsPage = () => {
                   <div className="flex items-center gap-4">
                     <div className="avatar">
                       <div className="w-16 rounded-full">
-                        <img src={friend.profilePic} alt={friend.fullName} />
+                        {getProfilePictureUrl(friend) && (
+                          <img 
+                            src={getProfilePictureUrl(friend)} 
+                            alt={friend.fullName}
+                            className="rounded-full object-cover"
+                            onError={(e) => {
+                              console.warn('Profile picture failed to load for:', friend.fullName);
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                     <div>
@@ -197,7 +217,9 @@ const FriendsPage = () => {
                     </div>
                   </div>
                   <div className="card-actions justify-end mt-4">
-                    <button className="btn btn-sm btn-primary">Message</button>
+                  <Link to={`/chat/${friend._id}`} className="btn btn-outline w-full">
+                  Message
+                  </Link>
                   </div>
                 </div>
               </div>
@@ -225,7 +247,17 @@ const FriendsPage = () => {
                     <div className="flex items-center gap-4">
                       <div className="avatar">
                         <div className="w-16 rounded-full">
-                          <img src={user.profilePic} alt={user.fullName} />
+                          {getProfilePictureUrl(user) && (
+                            <img 
+                              src={getProfilePictureUrl(user)} 
+                              alt={user.fullName}
+                              className="rounded-full object-cover"
+                              onError={(e) => {
+                                console.warn('Profile picture failed to load for:', user.fullName);
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          )}
                         </div>
                       </div>
                       <div>
@@ -281,3 +313,14 @@ const FriendsPage = () => {
 };
 
 export default FriendsPage;
+
+// Handle message button click
+const handleMessageClick = async (friendId) => {
+  try {
+    // Navigate to the chat page with the friend ID
+    navigate(`/chat/${friendId}`);
+  } catch (error) {
+    toast.error('Failed to open chat');
+    console.error(error);
+  }
+};

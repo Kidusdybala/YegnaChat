@@ -6,13 +6,17 @@ export async function getRecommendedUsers(req, res) {
     const currentUserId = req.user.id;
     const currentUser = req.user;
 
+    // For getRecommendedUsers
     const recommendedUsers = await User.find({
       $and: [
         { _id: { $ne: currentUserId } }, 
         { _id: { $nin: currentUser.friends } }, 
         { _id: { $nin: currentUser.blockedUsers } },
       ],
-    });
+    })
+    .limit(30) // Only return 10 users
+    .select('fullName profilePic') // Only select needed fields
+    .lean(); // Use lean for better performance
     res.status(200).json(recommendedUsers);
   } catch (error) {
     console.error("Error in getRecommendedUsers controller", error.message);
@@ -138,6 +142,30 @@ export async function getOutgoingFriendReqs(req, res) {
     res.status(200).json(outgoingRequests);
   } catch (error) {
     console.log("Error in getOutgoingFriendReqs controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+export async function cancelFriendRequest(req, res) {
+  try {
+    const { id: requestId } = req.params;
+    const userId = req.user.id;
+
+    const friendRequest = await FriendRequest.findById(requestId);
+
+    if (!friendRequest) {
+      return res.status(404).json({ message: "Friend request not found" });
+    }
+
+    // Only sender can cancel the request
+    if (friendRequest.sender.toString() !== userId) {
+      return res.status(403).json({ message: "You are not authorized to cancel this request" });
+    }
+
+    await FriendRequest.findByIdAndDelete(requestId);
+
+    res.status(200).json({ message: "Friend request canceled successfully" });
+  } catch (error) {
+    console.error("Error in cancelFriendRequest controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }

@@ -81,7 +81,85 @@ export const userAPI = {
 export const chatAPI = {
   // Get stream token
   getStreamToken: async () => {
-    const response = await axiosInstance.get('/chat/stream-token');
+    const response = await axiosInstance.get('/chat/token');
+    return response.data;
+  },
+  
+  // Get user chats
+  getUserChats: async () => {
+    const response = await axiosInstance.get('/chat/user-chats');
+    return response.data;
+  },
+  
+  // Get chat messages
+  getChatMessages: async (chatId) => {
+    const response = await axiosInstance.get(`/chat/messages/${chatId}`);
+    return response.data;
+  },
+  
+  // Send message
+  sendMessage: async (chatId, message) => {
+    const response = await axiosInstance.post(`/chat/messages/${chatId}`, { message });
+    return response.data;
+  },
+  
+  // Mark messages as read
+  markMessagesAsRead: async (chatId) => {
+    const response = await axiosInstance.put(`/chat/messages/${chatId}/read`);
+    return response.data;
+  },
+  
+  // Get unread messages count
+  getUnreadMessagesCount: async () => {
+    const response = await axiosInstance.get('/chat/unread-count');
+    return response.data;
+  },
+  
+  // Create or get chat with user
+  createOrGetChat: async (userId) => {
+    const response = await axiosInstance.post('/chat/create', { userId });
+    return response.data;
+  },
+  
+  // Add these to the chatAPI object
+  
+  // Create or get a Stream chat channel
+  createOrGetStreamChat: async (userId) => {
+    const response = await axiosInstance.post('/chat/stream-chat', { userId });
+    return response.data;
+  },
+  
+  // Upload media for Stream chat
+  uploadMedia: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await axiosInstance.post('/chat/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  // Simple chat API (fallback when Stream is not available)
+  createSimpleChat: async (userId) => {
+    const response = await axiosInstance.post('/chat/simple-chat', { userId });
+    return response.data;
+  },
+
+  getUserChats: async () => {
+    const response = await axiosInstance.get('/chat/chats');
+    return response.data;
+  },
+
+  getChatMessages: async (chatId) => {
+    const response = await axiosInstance.get(`/chat/messages/${chatId}`);
+    return response.data;
+  },
+
+  sendChatMessage: async (chatId, content) => {
+    const response = await axiosInstance.post(`/chat/messages/${chatId}`, { content });
     return response.data;
   }
 };

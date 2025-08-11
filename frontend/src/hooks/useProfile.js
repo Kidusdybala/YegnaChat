@@ -16,7 +16,7 @@ const useProfile = (initialProfile) => {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData) => {
-      const response = await axiosInstance.post('/auth/onboarding', profileData);
+      const response = await axiosInstance.post('/auth/editprofile', profileData);
       return response.data;
     },
     onSuccess: () => {

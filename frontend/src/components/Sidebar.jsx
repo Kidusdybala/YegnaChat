@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import useAuthUser from "../hooks/useAuthUser";
-import { BellIcon, HomeIcon, ShipWheelIcon, UsersIcon, Settings } from "lucide-react";
+import { BellIcon, HomeIcon, ShipWheelIcon, UsersIcon, Settings, MessageCircleIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { userAPI } from "../lib/api";
+import { getProfilePictureUrl } from "../utils/imageUtils";
 
 const Sidebar = () => {
   const { authUser } = useAuthUser();
@@ -26,6 +27,18 @@ const Sidebar = () => {
 
   // Count of notifications (accepted friend requests)
   const notificationCount = notifications?.acceptedReqs?.length || 0;
+  
+  // Fetch unread messages count (this would need to be implemented in the backend)
+  const { data: unreadMessages } = useQuery({
+    queryKey: ["unreadMessages"],
+    queryFn: () => chatAPI.getUnreadMessagesCount(),
+    enabled: !!authUser,
+  });
+  
+  // Count of unread messages
+  const unreadMessagesCount = unreadMessages?.count || 0;
+
+  const profilePicUrl = getProfilePictureUrl(authUser);
 
   return (
     <aside className="w-64 bg-base-200 border-r border-base-300 hidden lg:flex flex-col h-screen sticky top-0">
@@ -65,6 +78,18 @@ const Sidebar = () => {
             <div className="badge badge-sm badge-error text-white ml-auto">{friendRequestCount}</div>
           )}
         </Link>
+        <Link
+          to="/chat"
+          className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
+            currentPath === "/chat" ? "btn-active" : ""
+          }`}
+        >
+          <MessageCircleIcon className="size-5 text-base-content opacity-70" />
+          <span>Chats</span>
+          {unreadMessagesCount > 0 && (
+            <div className="badge badge-sm badge-error text-white ml-auto">{unreadMessagesCount}</div>
+          )}
+        </Link>
 
         <Link
           to="/notifications"
@@ -95,7 +120,17 @@ const Sidebar = () => {
         <div className="flex items-center gap-3">
           <div className="avatar">
             <div className="w-10 rounded-full">
-              <img src={authUser?.profilePic} alt="User Avatar" />
+              {profilePicUrl && (
+                <img 
+                  src={profilePicUrl} 
+                  alt="User Avatar" 
+                  className="rounded-full object-cover"
+                  onError={(e) => {
+                    console.warn('Profile picture failed to load:', profilePicUrl);
+                    e.target.style.display = 'none';
+                  }}
+                />
+              )}
             </div>
           </div>
           <div className="flex-1">
@@ -110,4 +145,5 @@ const Sidebar = () => {
     </aside>
   );
 };
+
 export default Sidebar;

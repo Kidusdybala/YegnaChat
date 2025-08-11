@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema(
     ],
   },
   {
-    timestamps: true, // ✅ correct placement
+    timestamps: true, //  correct placement
   }
 );
 
@@ -55,6 +55,9 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+// Add before creating the model
+userSchema.index({ friends: 1 });
 
 const User = mongoose.model("User", userSchema);
 

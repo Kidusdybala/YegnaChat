@@ -2,12 +2,15 @@ import { Link, useLocation } from "react-router-dom";
 import useAuthUser from "../hooks/useAuthUser";
 import { BellIcon, LogOutIcon, ShipWheelIcon } from "lucide-react";
 import useLogout from "../hooks/useLogout"; // Fixed import path
+import { getProfilePictureUrl } from "../utils/imageUtils";
 
 const Navbar = () => {
   const { authUser } = useAuthUser();
   const location = useLocation();
   const isChatPage = location.pathname?.startsWith("/chat");
   const { logoutMutation } = useLogout();
+
+  const profilePicUrl = getProfilePictureUrl(authUser);
 
   return (
     <nav className="bg-base-200 border-b border-base-300 sticky top-0 z-30 h-16 flex items-center">
@@ -35,10 +38,19 @@ const Navbar = () => {
 
           {/* TODO */}
 
-
           <div className="avatar">
             <div className="w-9 rounded-full">
-              <img src={authUser?.profilePic} alt="User Avatar" rel="noreferrer" />
+              {profilePicUrl && (
+                <img 
+                  src={profilePicUrl} 
+                  alt="User Avatar" 
+                  className="rounded-full object-cover"
+                  onError={(e) => {
+                    console.warn('Profile picture failed to load:', profilePicUrl);
+                    e.target.style.display = 'none';
+                  }}
+                />
+              )}
             </div>
           </div>
 
