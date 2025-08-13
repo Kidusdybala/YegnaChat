@@ -1,16 +1,30 @@
 import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import useAuthUser from "../hooks/useAuthUser";
 import { BellIcon, LogOutIcon, ShipWheelIcon } from "lucide-react";
-import useLogout from "../hooks/useLogout"; // Fixed import path
 import { getProfilePictureUrl } from "../utils/imageUtils";
+import LogoutConfirmModal from "./LogoutConfirmModal";
 
 const Navbar = () => {
-  const { authUser } = useAuthUser();
+  const { authUser, logout, isLoggingOut } = useAuthUser();
   const location = useLocation();
   const isChatPage = location.pathname?.startsWith("/chat");
-  const { logoutMutation } = useLogout();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const profilePicUrl = getProfilePictureUrl(authUser);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    logout();
+    setShowLogoutModal(false);
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
 
   return (
     <nav className="bg-base-200 border-b border-base-300 sticky top-0 z-30 h-16 flex items-center">
@@ -43,11 +57,28 @@ const Navbar = () => {
           </div>
 
           {/* Logout button */}
-          <button className="btn btn-ghost btn-circle" onClick={logoutMutation}>
-            <LogOutIcon className="h-6 w-6 text-base-content opacity-70" />
+          <button 
+            className="btn btn-ghost btn-circle" 
+            onClick={handleLogoutClick}
+            disabled={isLoggingOut}
+            title="Logout"
+          >
+            {isLoggingOut ? (
+              <span className="loading loading-spinner loading-sm"></span>
+            ) : (
+              <LogOutIcon className="h-6 w-6 text-base-content opacity-70" />
+            )}
           </button>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal 
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+        isLoggingOut={isLoggingOut}
+      />
     </nav>
   );
 };

@@ -1,30 +1,41 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { authAPI } from '../lib/api';
-import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { authAPI } from '../lib/api';
+import toast from 'react-hot-toast';
 
-const useLogout = () => {
+export const useLogout = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  
-  // Logout mutation
+
   const logoutMutation = useMutation({
     mutationFn: authAPI.logout,
     onSuccess: () => {
-      toast.success('Logged out successfully!');
-      queryClient.invalidateQueries({ queryKey: ['authUser'] });
-      navigate('/login');
+      // Clear all queries from cache
+      queryClient.clear();
+      
+      // Clear local storage/session storage if any
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Show success message
+      toast.success('Logged out successfully');
+      
+      // Navigate to login page
+      navigate('/login', { replace: true });
     },
     onError: (error) => {
       console.error('Logout error:', error);
-      toast.error('Failed to logout');
+      toast.error(error?.response?.data?.message || 'Failed to logout');
     }
   });
-  
+
+  const logout = () => {
+    logoutMutation.mutate();
+  };
+
   return {
-    logoutMutation: logoutMutation.mutate,
-    isLogoutPending: logoutMutation.isPending,
-    logoutError: logoutMutation.error
+    logout,
+    isLoggingOut: logoutMutation.isPending
   };
 };
 

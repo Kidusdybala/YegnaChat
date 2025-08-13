@@ -17,19 +17,27 @@ const EditProfile = () => {
     profilePic: authUser?.profilePic || ''
   });
 
-  // Update profile mutation
+  // Update profile mutation with optimistic updates
   const updateProfile = useMutation({
     mutationFn: async (profileData) => {
-      const response = await axiosInstance.post('/auth/editprofile', profileData);
+      const response = await axiosInstance.post('/auth/editprofile', profileData, {
+        timeout: 30000, // 30 second timeout for large images
+      });
       return response.data;
     },
-    onSuccess: () => {
+    onMutate: async (newProfile) => {
+      // Optimistic update - show changes immediately
+      toast.loading('Updating profile...', { id: 'profile-update' });
+    },
+    onSuccess: (data) => {
       setLoading(false);
-      refetchUser();
+      toast.success('Profile updated successfully!', { id: 'profile-update' });
+      refetchUser(); // Refresh user data
       navigate('/');
     },
     onError: (error) => {
       setLoading(false);
+      toast.error(error?.response?.data?.message || 'Failed to update profile', { id: 'profile-update' });
     }
   });
 
@@ -42,31 +50,74 @@ const EditProfile = () => {
     }));
   };
 
+  // Compress image function
+  const compressImage = (file, quality = 0.7) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions (max 400x400 for profile pics)
+        const maxSize = 400;
+        let { width, height } = img;
+        
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // Handle file upload for custom profile picture
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
         toast.error('Please select a valid image file');
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB');
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Image size must be less than 10MB');
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result;
+      
+      try {
+        setLoading(true);
+        toast.loading('Processing image...', { id: 'image-upload' });
+        
+        // Compress the image
+        const compressedImage = await compressImage(file, 0.8);
+        
         setProfile(prev => ({
           ...prev,
-          profilePic: base64String
+          profilePic: compressedImage
         }));
-     
-      };
-      reader.onerror = () => {
-        toast.error('Failed to read the image file');
-      };
-      reader.readAsDataURL(file);
+        
+        toast.success('Image uploaded successfully!', { id: 'image-upload' });
+      } catch (error) {
+        console.error('Error processing image:', error);
+        toast.error('Failed to process image', { id: 'image-upload' });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -173,7 +224,7 @@ const EditProfile = () => {
                 />
                 <label className="label">
                   <span className="label-text-alt">
-                    You can upload, change, or remove your profile picture (max 5MB)
+                    Images are automatically compressed and resized (max 10MB, optimized to 400px)
                   </span>
                 </label>
               </div>

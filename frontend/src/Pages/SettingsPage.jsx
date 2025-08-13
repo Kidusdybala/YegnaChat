@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { THEMES } from "../constants";
+import useAuthUser from "../hooks/useAuthUser";
+import LogoutConfirmModal from "../components/LogoutConfirmModal";
 import { 
   User, 
   Palette, 
@@ -12,11 +15,14 @@ import {
   Shield, 
   HelpCircle,
   Info,
-  Check 
+  Check,
+  LogOut
 } from "lucide-react";
 
 const SettingsPage = () => {
   const { theme, changeTheme } = useTheme();
+  const { logout, isLoggingOut } = useAuthUser();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const getThemeIcon = (themeName) => {
     if (themeName === 'light') return <Sun className="w-4 h-4" />;
@@ -26,6 +32,19 @@ const SettingsPage = () => {
 
   const getCurrentTheme = () => {
     return THEMES.find(t => t.name === theme) || THEMES[0];
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    logout();
+    setShowLogoutModal(false);
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   return (
@@ -223,8 +242,47 @@ const SettingsPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Account Actions */}
+          <div className="card bg-base-200 shadow-lg">
+            <div className="card-body">
+              <div className="flex items-center gap-3 mb-4">
+                <LogOut className="w-6 h-6 text-error" />
+                <h2 className="card-title text-base-content">Account Actions</h2>
+              </div>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={handleLogoutClick}
+                  disabled={isLoggingOut}
+                  className="flex items-center justify-between p-4 rounded-lg bg-base-100 hover:bg-error/10 transition-colors duration-200 group w-full border-2 border-transparent hover:border-error/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <LogOut className="w-5 h-5 text-error" />
+                    <div className="text-left">
+                      <span className="font-medium text-error">Logout</span>
+                      <p className="text-sm text-base-content/60">Sign out of your account</p>
+                    </div>
+                  </div>
+                  {isLoggingOut ? (
+                    <span className="loading loading-spinner loading-sm text-error"></span>
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-error/50 group-hover:text-error transition-colors" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal 
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+        isLoggingOut={isLoggingOut}
+      />
     </div>
   );
 };

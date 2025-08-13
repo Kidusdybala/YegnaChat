@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { chatAPI } from '../lib/api';
 import { getProfilePictureUrl, getUserInitials } from '../utils/imageUtils';
 import { formatDistanceToNow } from 'date-fns';
@@ -8,50 +9,40 @@ import useAuthUser from '../hooks/useAuthUser';
 import toast from 'react-hot-toast';
 
 const ChatList = () => {
-  const [chats, setChats] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const { authUser } = useAuthUser();
+  const queryClient = useQueryClient();
 
-  const fetchChats = async () => {
-    try {
-      setLoading(true);
-      
-      // Make sure we have an authenticated user before fetching chats
-      if (!authUser || !authUser._id) {
-        setLoading(false);
-        return;
-      }
-      
+  // Auto-refresh chats every 5 seconds when user is active
+  const { 
+    data: chatsData, 
+    isLoading, 
+    refetch 
+  } = useQuery({
+    queryKey: ['chats', authUser?._id],
+    queryFn: async () => {
+      if (!authUser?._id) return { chats: [] };
       const response = await chatAPI.getUserChats();
-      
-      if (response && response.chats) {
-        setChats(response.chats);
-      } else {
-        setChats([]);
-      }
-    } catch (error) {
+      return response || { chats: [] };
+    },
+    enabled: !!authUser?._id,
+    refetchInterval: 5000, // Auto-refresh every 5 seconds
+    refetchIntervalInBackground: false, // Only when tab is active
+    staleTime: 3000, // Consider data fresh for 3 seconds
+    retry: 2,
+    onError: (error) => {
       console.error('Error fetching chats:', error);
       toast.error('Failed to load chats');
-    } finally {
-      setLoading(false);
     }
-  };
-  
+  });
 
-
-  useEffect(() => {
-    if (authUser) {
-      fetchChats();
-    }
-  }, [authUser]);
+  const chats = chatsData?.chats || [];
 
   const handleChatClick = (userId) => {
     navigate(`/chat/${userId}`);
   };
 
-  // Function to format the timestamp
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
     return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
@@ -62,7 +53,7 @@ const ChatList = () => {
     return participants.find(user => user._id !== currentUserId);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-full p-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -92,12 +83,12 @@ const ChatList = () => {
           <h2 className="text-xl font-bold">Recent Chats</h2>
           <div className="flex gap-2">
             <button 
-              onClick={fetchChats} 
+              onClick={() => refetch()} 
               className="btn btn-sm btn-ghost btn-circle"
-              disabled={loading}
+              disabled={isLoading}
               title="Refresh chats"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>

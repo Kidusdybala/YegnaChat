@@ -132,6 +132,24 @@ const ChatPage = () => {
     }
   }, [targetUserId, authUser]);
 
+  // Auto-refresh messages every 30 seconds (backup for socket failures)
+  useEffect(() => {
+    if (!chatId) return;
+    
+    const refreshMessages = async () => {
+      try {
+        const messagesResponse = await chatAPI.getChatMessages(chatId);
+        setMessages(messagesResponse.messages || []);
+      } catch (error) {
+        console.error("Error refreshing messages:", error);
+      }
+    };
+    
+    const interval = setInterval(refreshMessages, 30000); // Every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [chatId]);
+
   // Socket.IO message listeners
   useEffect(() => {
     if (!socket || !targetUserId) return;
