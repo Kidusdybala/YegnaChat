@@ -7,7 +7,8 @@ import {
   createOrGetChat,
   getChatMessages,
   sendMessage,
-  getUserChats
+  getUserChats,
+  getMessagesBetweenUsers
 } from "../controllers/chat.controller.js";
 import multer from "multer";
 import path from "path";
@@ -47,10 +48,7 @@ router.get("/chats", protectRoute, getUserChats);
 router.get("/messages/:chatId", protectRoute, getChatMessages);
 router.post("/messages/:chatId", protectRoute, sendMessage);
 
-// Simple chat routes (fallback)
-router.post("/simple-chat", protectRoute, createOrGetChat);
-router.get("/chats", protectRoute, getUserChats);
-router.get("/messages/:chatId", protectRoute, getChatMessages);
-router.post("/messages/:chatId", protectRoute, sendMessage);
+// Add this new route for getting messages between users
+router.get('/messages/user/:targetUserId', protectRoute, getMessagesBetweenUsers);
 
 export default router;

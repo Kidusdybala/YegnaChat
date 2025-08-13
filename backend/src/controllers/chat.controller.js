@@ -226,3 +226,41 @@ export async function getUserChats(req, res) {
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+// Add this function to your existing chat.controller.js file
+
+export async function getMessagesBetweenUsers(req, res) {
+  try {
+    const { targetUserId } = req.params;
+    const currentUserId = req.user.id;
+    
+    // Find or create a chat between these users
+    let chat = await Chat.findOne({
+      participants: { $all: [currentUserId, targetUserId] }
+    });
+    
+    if (!chat) {
+      // Create a new chat if it doesn't exist
+      chat = await Chat.create({
+        participants: [currentUserId, targetUserId]
+      });
+    }
+    
+    // Get messages for this chat
+    const messages = await Message.find({ chat: chat._id })
+      .sort({ createdAt: 1 })
+      .populate('sender', 'fullName profilePic');
+    
+    // Format messages for the frontend
+    const formattedMessages = messages.map(msg => ({
+      senderId: msg.sender._id,
+      content: msg.content,
+      timestamp: msg.createdAt
+    }));
+    
+    res.status(200).json({ messages: formattedMessages });
+  } catch (error) {
+    console.error("Error in getMessagesBetweenUsers:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}

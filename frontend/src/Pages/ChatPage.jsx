@@ -1,112 +1,272 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import useAuthUser from "../hooks/useAuthUser";
-import { useQuery } from "@tanstack/react-query";
-import { chatAPI } from "../lib/api";
-
-import {
-  Channel,
-  ChannelHeader,
-  Chat,
-  MessageInput,
-  MessageList,
-  Thread,
-  Window,
-} from "stream-chat-react";
-import { StreamChat } from "stream-chat";
+import { useSocketContext } from "../context/SocketContext";
+import { chatAPI, userAPI } from "../lib/api";
+import { Send, Phone, Video, Image } from "lucide-react";
 import toast from "react-hot-toast";
-
-const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
+import CallButton from "../components/CallButton";
+import VideoCall from "../components/VideoCall"; // Add this import
 
 const ChatPage = () => {
-  const { id: targetUserId } = useParams();
-
-  const [chatClient, setChatClient] = useState(null);
-  const [channel, setChannel] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  const { chatId: targetUserId } = useParams();
   const { authUser } = useAuthUser();
+  const { socket } = useSocketContext();
+  
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [targetUser, setTargetUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [chatId, setChatId] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showVideoCall, setShowVideoCall] = useState(false); // Add this state
+  
+  // Move these functions INSIDE the component
+  // Add this function to handle video call
+  const handleVideoCall = () => {
+    setShowVideoCall(true);
+  };
 
-  const { data: tokenData } = useQuery({
-    queryKey: ["streamToken"],
-    queryFn: getStreamToken,
-    enabled: !!authUser, // this will run only when authUser is available
-  });
+  // Add this function to handle ending the call
+  const handleEndCall = () => {
+    setShowVideoCall(false);
+  };
+  
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('file', file); // Change 'image' to 'file' to match backend
+
+      const response = await chatAPI.uploadImage(formData);
+      
+      // Send message with image URL
+      const messageResponse = await chatAPI.sendMessage(chatId, response.fileUrl);
+      
+      // Add to local messages
+      setMessages(prev => [...prev, messageResponse.message]);
+      
+      // Send via Socket.IO for real-time
+      socket?.emit('sendMessage', {
+        senderId: authUser._id,
+        receiverId: targetUserId,
+        content: response.fileUrl
+      });
+
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setIsUploading(false);
+    }
+};
+  
+  // Get target user info
   useEffect(() => {
-    const initChat = async () => {
-      if (!tokenData?.token || !authUser) return;
-
+    const fetchTargetUser = async () => {
       try {
-        console.log("Initializing stream chat client...");
+        const user = await userAPI.getUserById(targetUserId);
+        setTargetUser(user);
+      } catch (error) {
+        console.error("Error fetching target user:", error);
+        toast.error("Failed to load user information");
+      }
+    };
 
-        const client = StreamChat.getInstance(STREAM_API_KEY);
+    if (targetUserId) {
+      fetchTargetUser();
+    }
+  }, [targetUserId]);
 
-        await client.connectUser(
-          {
-            id: authUser._id,
-            name: authUser.fullName,
-            image: authUser.profilePic,
-          },
-          tokenData.token
-        );
-
-        //
-        const channelId = [authUser._id, targetUserId].sort().join("-");
-
-        // you and me
-        // if i start the chat => channelId: [myId, yourId]
-        // if you start the chat => channelId: [yourId, myId]  => [myId,yourId]
-
-        const currChannel = client.channel("messaging", channelId, {
-          members: [authUser._id, targetUserId],
-        });
-
-        await currChannel.watch();
-
-        setChatClient(client);
-        setChannel(currChannel);
+  // Create or get chat
+  useEffect(() => {
+    const initializeChat = async () => {
+      try {
+        const response = await chatAPI.createOrGetChat(targetUserId);
+        setChatId(response.chat._id);
+        
+        // Load existing messages
+        const messagesResponse = await chatAPI.getChatMessages(response.chat._id);
+        setMessages(messagesResponse.messages || []);
       } catch (error) {
         console.error("Error initializing chat:", error);
-        toast.error("Could not connect to chat. Please try again.");
+        toast.error("Failed to load chat");
       } finally {
         setLoading(false);
       }
     };
 
-    initChat();
-  }, [tokenData, authUser, targetUserId]);
+    if (targetUserId && authUser) {
+      initializeChat();
+    }
+  }, [targetUserId, authUser]);
 
-  const handleVideoCall = () => {
-    if (channel) {
-      const callUrl = `${window.location.origin}/call/${channel.id}`;
+  // Socket.IO message listeners
+  useEffect(() => {
+    if (!socket) return;
 
-      channel.sendMessage({
-        text: `I've started a video call. Join me here: ${callUrl}`,
+    const handleNewMessage = (messageData) => {
+      if (messageData.senderId === targetUserId) {
+        setMessages(prev => [...prev, {
+          _id: Date.now(),
+          content: messageData.content,
+          sender: { _id: messageData.senderId, fullName: targetUser?.fullName },
+          createdAt: messageData.timestamp
+        }]);
+      }
+    };
+
+    socket.on('getMessage', handleNewMessage);
+
+    return () => {
+      socket.off('getMessage', handleNewMessage);
+    };
+  }, [socket, targetUserId, targetUser]);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !chatId) return;
+
+    try {
+      // Send via API
+      const response = await chatAPI.sendMessage(chatId, newMessage);
+      
+      // Add to local messages
+      setMessages(prev => [...prev, response.message]);
+      
+      // Send via Socket.IO for real-time
+      socket?.emit('sendMessage', {
+        senderId: authUser._id,
+        receiverId: targetUserId,
+        content: newMessage
       });
 
-      toast.success("Video call link sent successfully!");
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
     }
   };
 
-  if (loading || !chatClient || !channel) return <ChatLoader />;
+  
+  if (loading) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>Loading chat...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-[93vh]">
-      <Chat client={chatClient}>
-        <Channel channel={channel}>
-          <div className="w-full relative">
-            <CallButton handleVideoCall={handleVideoCall} />
-            <Window>
-              <ChannelHeader />
-              <MessageList />
-              <MessageInput focus />
-            </Window>
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gray-400 max-w-3xl w-full mx-auto border border-gray-200 rounded-lg overflow-hidden">
+      {/* Show VideoCall component when showVideoCall is true */}
+      {showVideoCall && targetUser && (
+        <VideoCall targetUser={targetUser} onEndCall={handleEndCall} />
+      )}
+      
+      {/* Chat Header */}
+      <div className="bg-gradient-to-r from-blue-800 to-blue-900 px-6 py-4 flex items-center justify-between text-white shadow-md">
+        {/* Center section wrapper */}
+        <div className="flex-1 flex justify-center">
+          <div className="flex items-center space-x-3">
+            <img
+              src={targetUser?.profilePic || "/default-avatar.png"}
+              alt={targetUser?.fullName}
+              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
+            />
+            <div className="text-center">
+              <h2 className="font-semibold">{targetUser?.fullName}</h2>
+              <p className="text-sm text-green-300">Online</p>
+            </div>
           </div>
-          <Thread />
-        </Channel>
-      </Chat>
+        </div>
+  
+        <div className="flex space-x-2">
+          <button className="p-2 hover:bg-blue-600 rounded-full transition-colors">
+            <Phone className="w-5 h-5" />
+          </button>
+          <button 
+            className="p-2 hover:bg-blue-600 rounded-full transition-colors"
+            onClick={handleVideoCall} // Add onClick handler
+          >
+            <Video className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+  
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
+        {messages.map((message) => (
+          <div
+            key={message._id}
+            className={`flex ${message.sender._id === authUser._id ? "justify-end" : "justify-start"}`}
+          >
+            <div
+              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-md ${message.sender._id === authUser._id
+                ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+                : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {message.content.startsWith('/uploads/') ? (
+                <img 
+                  src={`http://localhost:5001${message.content}`} 
+                  alt="Shared image" 
+                  className="max-w-full rounded-lg"
+                  loading="lazy"
+                />
+              ) : (
+                <p>{message.content}</p>
+              )}
+              <p className="text-xs mt-1 opacity-70">
+                {new Date(message.createdAt).toLocaleTimeString()}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+  
+      {/* Message Input */}
+      <form onSubmit={sendMessage} className="border-t p-3 bg-gray-50">
+        <div className="max-w-2xl mx-auto flex items-center space-x-2 w-full">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+            id="imageUpload"
+            disabled={isUploading}
+          />
+          <label
+            htmlFor="imageUpload"
+            className={`p-2 text-gray-500 hover:text-blue-600 cursor-pointer ${isUploading ? 'opacity-50' : ''}`}
+          >
+            <Image className="h-5 w-5" />
+          </label>
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type a message..."
+            className="flex-1 border border-gray-300 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim() || isUploading}
+            className="bg-blue-800 text-white p-2 rounded-full hover:bg-blue-900 disabled:opacity-50 transition-colors"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
+
 export default ChatPage;
