@@ -1,25 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { SunIcon, MoonIcon, PaletteIcon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import { THEMES } from '../constants';
 
 const ThemeSelector = () => {
-  const [theme, setTheme] = useState(() => {
-    // Get theme from localStorage or use default
-    return localStorage.getItem('theme') || 'light';
-  });
-  
+  const { theme, changeTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
-
-  // Apply theme when component mounts or theme changes
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   const handleThemeChange = (newTheme) => {
-    setTheme(newTheme);
+    changeTheme(newTheme);
     setIsOpen(false);
   };
 

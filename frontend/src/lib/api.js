@@ -70,6 +70,11 @@ export const userAPI = {
   getUserById: async (userId) => {
     const response = await axiosInstance.get(`/user/${userId}`);
     return response.data.user;
+  },
+
+  searchUsers: async (query) => {
+    const response = await axiosInstance.get(`/user/search?q=${encodeURIComponent(query)}`);
+    return response.data;
   }
 };
 

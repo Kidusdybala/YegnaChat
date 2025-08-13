@@ -226,3 +226,37 @@ export const getUserById = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const searchUsers = async (req, res) => {
+  try {
+    const { q: query } = req.query;
+    const currentUserId = req.user.id;
+    const currentUser = req.user;
+
+    if (!query || query.trim() === '') {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    // Search users by name (case-insensitive)
+    const users = await User.find({
+      $and: [
+        { _id: { $ne: currentUserId } }, // Exclude current user
+        { _id: { $nin: currentUser.blockedUsers } }, // Exclude blocked users
+        { 
+          fullName: { 
+            $regex: query.trim(), 
+            $options: 'i' 
+          } 
+        }
+      ],
+    })
+    .select('fullName profilePic')
+    .limit(20)
+    .lean();
+
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error("Error in searchUsers controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

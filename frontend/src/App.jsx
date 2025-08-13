@@ -12,8 +12,7 @@ import PageLoader from "./components/PageLoader";
 import useAuthUser from "./hooks/useAuthUser";
 import Layout from "./components/Layout";
 import SettingsPage from "./Pages/SettingsPage";
-import ThemeSelector from "./components/ThemeSelector";
-import { Settings } from "lucide-react";
+import ThemeProvider from "./context/ThemeContext";
 
 const App = () => {
   const { authUser, isLoading, isError } = useAuthUser();
@@ -22,8 +21,9 @@ const App = () => {
   if (isError) return <div className="error">Error loading user data</div>;
 
   return (
-    <div className="h-screen" data-theme="night">
-      <Routes>
+    <ThemeProvider>
+      <div className="h-screen">
+        <Routes>
         <Route 
           path="/" 
           element={
@@ -119,10 +119,11 @@ const App = () => {
             )
           }
         />
-      </Routes>
+        </Routes>
 
-      <Toaster />
-    </div>
+        <Toaster />
+      </div>
+    </ThemeProvider>
   );
 };
 

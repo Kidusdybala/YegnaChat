@@ -14,14 +14,17 @@ const VideoCall = ({ targetUser, onEndCall }) => {
   const myVideo = useRef();
   const userVideo = useRef();
   
-  // Add this to your useEffect
+  // Initialize media stream
   useEffect(() => {
+    let currentStream = null;
+    
     // Get user's video and audio stream
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then((currentStream) => {
-        setStream(currentStream);
+      .then((mediaStream) => {
+        currentStream = mediaStream;
+        setStream(mediaStream);
         if (myVideo.current) {
-          myVideo.current.srcObject = currentStream;
+          myVideo.current.srcObject = mediaStream;
         }
       })
       .catch(error => {
@@ -34,14 +37,39 @@ const VideoCall = ({ targetUser, onEndCall }) => {
       setCall({ isReceivingCall: true, from, name: callerName, signal });
     });
   
-    // Cleanup function
+    // Cleanup function - runs when component unmounts
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      // Stop current stream if it exists
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => {
+          track.stop();
+        });
+      }
+      // Also stop the stream from state if different
+      if (stream && stream !== currentStream) {
+        stream.getTracks().forEach(track => {
+          track.stop();
+        });
       }
       socket.off('callUser');
+      socket.off('callAccepted');
     };
   }, []);
+
+  // Additional cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      console.log('VideoCall component unmounting, cleaning up...');
+      // Stop all tracks in the current stream
+      if (stream) {
+        stream.getTracks().forEach(track => {
+          if (track.readyState === 'live') {
+            track.stop();
+          }
+        });
+      }
+    };
+  }, [stream]);
 
   const answerCall = () => {
     setCallAccepted(true);
@@ -85,6 +113,8 @@ const VideoCall = ({ targetUser, onEndCall }) => {
       }
     });
 
+    // Remove any existing 'callAccepted' listeners to prevent duplicates
+    socket.off('callAccepted');
     socket.on('callAccepted', (signal) => {
       setCallAccepted(true);
       peer.signal(signal);
@@ -94,86 +124,120 @@ const VideoCall = ({ targetUser, onEndCall }) => {
   };
 
   const endCall = () => {
+    console.log('Ending call and cleaning up resources...');
+    
+    // Destroy peer connection
     if (peer) {
       peer.destroy();
-    }
-    if (stream) {
-      stream.getTracks().forEach(track => {
-        track.stop();
-      });
+      setPeer(null);
     }
     
-    // Reset video elements
+    // Stop all media tracks immediately
+    if (stream) {
+      stream.getTracks().forEach(track => {
+        console.log('Stopping track:', track.kind, track.readyState);
+        track.stop();
+      });
+      setStream(null);
+    }
+    
+    // Reset video elements and clear their sources
     if (myVideo.current) {
       myVideo.current.srcObject = null;
+      myVideo.current.pause();
     }
     if (userVideo.current) {
       userVideo.current.srcObject = null;
+      userVideo.current.pause();
     }
     
+    // Reset call states
     setCallAccepted(false);
     setCall(null);
+    
+    // Notify socket about call end
     socket.emit('endCall', { userId: targetUser._id });
+    
+    // Remove any lingering socket listeners
+    socket.off('callAccepted');
+    
+    // Call parent component's onEndCall
     onEndCall();
+    
+    console.log('Call cleanup completed');
   };
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-white p-4 rounded-lg w-full max-w-4xl">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="bg-base-100 p-6 rounded-lg w-full max-w-4xl shadow-2xl border border-base-300">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="relative">
             <video
               playsInline
               muted
               ref={myVideo}
               autoPlay
-              className="w-full rounded-lg"
+              className="w-full rounded-lg shadow-md bg-base-200"
             />
-            <span className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded">
+            <span className="absolute bottom-2 left-2 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-medium">
               You
             </span>
           </div>
-          {callAccepted && (
+          {callAccepted ? (
             <div className="relative">
               <video
                 playsInline
                 ref={userVideo}
                 autoPlay
-                className="w-full rounded-lg"
+                className="w-full rounded-lg shadow-md bg-base-200"
               />
-              <span className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded">
+              <span className="absolute bottom-2 left-2 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-medium">
                 {targetUser.fullName}
               </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center bg-base-200 rounded-lg">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-primary text-primary-content flex items-center justify-center mx-auto mb-3">
+                  <span className="text-2xl font-bold">
+                    {targetUser.fullName?.charAt(0)?.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-base-content font-medium">{targetUser.fullName}</p>
+                <p className="text-base-content opacity-60 text-sm">
+                  {call?.isReceivingCall ? 'Incoming call...' : 'Waiting to connect...'}
+                </p>
+              </div>
             </div>
           )}
         </div>
         
-        <div className="flex justify-center gap-4 mt-4">
+        <div className="flex justify-center gap-4">
           {!callAccepted && !call && (
             <button
               onClick={callUser}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+              className="btn btn-primary px-8 py-3 rounded-lg font-medium"
               disabled={!stream}
             >
-              Call {targetUser.fullName}
+              📹 Call {targetUser.fullName}
             </button>
           )}
           
           {call?.isReceivingCall && !callAccepted && (
             <button
               onClick={answerCall}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+              className="btn btn-success px-8 py-3 rounded-lg font-medium"
             >
-              Answer Call from {call.name}
+              📞 Answer Call from {call.name}
             </button>
           )}
           
          {(callAccepted || call || stream) && (
           <button
             onClick={endCall}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+            className="btn btn-error px-8 py-3 rounded-lg font-medium"
           >
-            End Call
+            📵 End Call
           </button>
           )}
         </div>
