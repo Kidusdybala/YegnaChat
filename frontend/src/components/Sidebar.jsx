@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import useAuthUser from "../hooks/useAuthUser";
 import { BellIcon, HomeIcon, ShipWheelIcon, UsersIcon, Settings, MessageCircleIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { userAPI } from "../lib/api";
+import { userAPI, chatAPI } from "../lib/api";
 import { getProfilePictureUrl } from "../utils/imageUtils";
 
 const Sidebar = () => {
@@ -81,7 +81,7 @@ const Sidebar = () => {
         <Link
           to="/chat"
           className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${
-            currentPath === "/chat" ? "btn-active" : ""
+            currentPath.startsWith("/chat") ? "btn-active" : ""
           }`}
         >
           <MessageCircleIcon className="size-5 text-base-content opacity-70" />

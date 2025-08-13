@@ -1,5 +1,4 @@
 import axiosInstance from './axios';
-
 // =======================
 // Auth related API calls
 // =======================
@@ -13,7 +12,6 @@ export const authAPI = {
       return { user: null };
     }
   },
-
   login: async (credentials) => {
     const response = await axiosInstance.post('/auth/login', credentials);
     return response.data;
@@ -30,9 +28,8 @@ export const authAPI = {
   }
 };
 
-// =======================
 // User related API calls
-// =======================
+
 // Add this to your existing API functions
 export const userAPI = {
   getRecommendedUsers: async () => {
@@ -76,12 +73,38 @@ export const userAPI = {
   }
 };
 
-// =======================
 // Chat related API calls
-// =======================
-
 export const chatAPI = {
-  // Get stream token
+  getUserChats: async () => {
+    try {
+      const response = await axiosInstance.get('/chat/chats');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user chats:', error);
+      throw error;
+    }
+  },
+  
+  getUnreadMessagesCount: async () => {
+    try {
+      const response = await axiosInstance.get('/chat/unread-count');
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching unread messages count:", error);
+      return { count: 0 };
+    }
+  },
+  
+  markMessagesAsRead: async (chatId) => {
+    try {
+      const response = await axiosInstance.post(`/chat/mark-read/${chatId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+      throw error;
+    }
+  },
+  
   getStreamToken: async () => {
     const response = await axiosInstance.get('/chat/token');
     return response.data;
@@ -101,7 +124,7 @@ export const chatAPI = {
     const response = await axiosInstance.post(`/chat/messages/${chatId}`, { content });
     return response.data;
   },
-  
+
   uploadImage: async (formData) => {
     const response = await axiosInstance.post('/chat/upload', formData, {
       headers: {
@@ -110,4 +133,4 @@ export const chatAPI = {
     });
     return response.data;
   }
-};
+}

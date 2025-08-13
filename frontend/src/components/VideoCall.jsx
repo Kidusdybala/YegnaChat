@@ -1,8 +1,7 @@
-// Add these imports at the top of the file
 import { useEffect, useState, useRef } from 'react';
 import { useSocketContext } from '../context/SocketContext';
 import useAuthUser from '../hooks/useAuthUser';
-import SimplePeer from 'simple-peer';
+import { createPeer } from '../lib/simplePeerWrapper';
 
 const VideoCall = ({ targetUser, onEndCall }) => {
   const { socket } = useSocketContext();
@@ -46,14 +45,16 @@ const VideoCall = ({ targetUser, onEndCall }) => {
 
   const answerCall = () => {
     setCallAccepted(true);
-    const peer = new SimplePeer({ initiator: false, trickle: false, stream });
+    const peer = createPeer({ initiator: false, trickle: false, stream });
 
     peer.on('signal', (data) => {
       socket.emit('answerCall', { signal: data, to: call.from });
     });
 
     peer.on('stream', (remoteStream) => {
-      userVideo.current.srcObject = remoteStream;
+      if (userVideo.current) {
+        userVideo.current.srcObject = remoteStream;
+      }
     });
 
     peer.signal(call.signal);
@@ -67,7 +68,7 @@ const VideoCall = ({ targetUser, onEndCall }) => {
       return;
     }
     
-    const peer = new SimplePeer({ initiator: true, trickle: false, stream });
+    const peer = createPeer({ initiator: true, trickle: false, stream });
 
     peer.on('signal', (data) => {
       socket.emit('callUser', {
@@ -79,7 +80,9 @@ const VideoCall = ({ targetUser, onEndCall }) => {
     });
 
     peer.on('stream', (remoteStream) => {
-      userVideo.current.srcObject = remoteStream;
+      if (userVideo.current) {
+        userVideo.current.srcObject = remoteStream;
+      }
     });
 
     socket.on('callAccepted', (signal) => {
