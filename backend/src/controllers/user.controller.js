@@ -5,6 +5,8 @@ export async function getRecommendedUsers(req, res) {
   try {
     const currentUserId = req.user.id;
     const currentUser = req.user;
+
+    // For getRecommendedUsers
     const recommendedUsers = await User.find({
       $and: [
         { _id: { $ne: currentUserId } }, 
@@ -73,6 +75,27 @@ export async function sendFriendRequest(req, res) {
       sender: myId,
       receiver: receiverId,
     });
+    
+    // Get sender info for notification
+    const sender = await User.findById(myId).select('fullName');
+    
+    // Emit socket event for real-time notification
+    // We'll access the io instance from the global scope
+    const io = req.app.get('io');
+    if (io) {
+      // Get online users from the io instance
+      const onlineUsers = req.app.get('onlineUsers');
+      const receiverSocketId = onlineUsers.get(receiverId);
+      
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('getFriendRequest', {
+          requestId: friendRequest._id,
+          senderId: myId,
+          senderName: sender.fullName
+        });
+        console.log(`Friend request notification sent to ${receiverId}`);
+      }
+    }
 
     res.status(201).json(friendRequest);
   } catch (error) {
@@ -103,6 +126,26 @@ export async function acceptFriendRequest(req, res) {
     await User.findByIdAndUpdate(friendRequest.receiver, {
       $addToSet: { friends: friendRequest.sender },
     });
+    
+    // Get accepter info for notification
+    const accepter = await User.findById(friendRequest.receiver).select('fullName');
+    
+    // Emit socket event for real-time notification
+    const io = req.app.get('io');
+    if (io) {
+      // Get online users from the io instance
+      const onlineUsers = req.app.get('onlineUsers');
+      const senderSocketId = onlineUsers.get(friendRequest.sender.toString());
+      
+      if (senderSocketId) {
+        io.to(senderSocketId).emit('getFriendAccepted', {
+          requestId: friendRequest._id,
+          accepterId: friendRequest.receiver,
+          accepterName: accepter.fullName
+        });
+        console.log(`Friend acceptance notification sent to ${friendRequest.sender}`);
+      }
+    }
 
     res.status(200).json({ message: "Friend request accepted" });
   } catch (error) {
@@ -168,32 +211,18 @@ export async function cancelFriendRequest(req, res) {
   }
 }
 
-// Add the missing getFriendUsers function
-export async function getFriendUsers(req, res) {
+export const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
-      .select("friends")
-      .populate("friends", "fullName profilePic");
-
-    res.status(200).json(user.friends);
-  } catch (error) {
-    console.error("Error in getFriendUsers controller", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-}
-
-export async function getUserById(req, res) {
-  try {
-    const { id } = req.params;  // Changed from userId to id to match route parameter
-    const user = await User.findById(id).select('fullName profilePic');
+    const { id } = req.params;
     
+    const user = await User.findById(id).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     res.status(200).json({ user });
   } catch (error) {
-    console.error("Error in getUserById controller", error.message);
+    console.log("Error in getUserById controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
-}
+};

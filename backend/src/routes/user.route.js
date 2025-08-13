@@ -7,7 +7,6 @@ import {
   acceptFriendRequest,
   getFriendRequests,
   getOutgoingFriendReqs,
-  getFriendUsers,
   cancelFriendRequest,
   getUserById
 } from "../controllers/user.controller.js";
@@ -16,7 +15,7 @@ const router = express.Router();
 
 router.use(protectRoute);
 router.get("/", getRecommendedUsers);
-router.get("/friend", getFriendUsers);
+router.get("/friend", getMyFriends);
 router.post("/friend-request/:id", sendFriendRequest);
 router.put("/friend-request/:id/accept", acceptFriendRequest);
 router.delete("/friend-request/:id", cancelFriendRequest);

@@ -8,12 +8,15 @@ import {
   getChatMessages,
   sendMessage,
   getUserChats,
-  getMessagesBetweenUsers
+  getMessagesBetweenUsers,
+  getUnreadMessagesCount,
+  markMessagesAsRead
 } from "../controllers/chat.controller.js";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import Chat from "../models/Chat.js";
 
 // Get directory name for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -48,7 +51,33 @@ router.get("/chats", protectRoute, getUserChats);
 router.get("/messages/:chatId", protectRoute, getChatMessages);
 router.post("/messages/:chatId", protectRoute, sendMessage);
 
+// Test route to get all chats (for debugging)
+router.get("/all-chats", protectRoute, async (req, res) => {
+  try {
+    const chats = await Chat.find()
+      .populate('participants', 'fullName profilePic')
+      .populate({
+        path: 'lastMessage',
+        populate: {
+          path: 'sender',
+          select: 'fullName profilePic'
+        }
+      });
+    
+    res.status(200).json({ chats });
+  } catch (error) {
+    console.log("Error in test route:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 // Add this new route for getting messages between users
 router.get('/messages/user/:targetUserId', protectRoute, getMessagesBetweenUsers);
+
+// Add route for getting unread messages count
+router.get('/unread-count', protectRoute, getUnreadMessagesCount);
+
+// Add route for marking messages as read
+router.post('/mark-read/:chatId', protectRoute, markMessagesAsRead);
 
 export default router;

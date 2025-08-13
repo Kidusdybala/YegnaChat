@@ -30,6 +30,9 @@ const PORT = process.env.PORT || 5001;
 // Create HTTP server
 const server = createServer(app);
 
+// Socket.IO event handlers
+const onlineUsers = new Map();
+
 // Initialize Socket.IO
 const io = new Server(server, {
   cors: {
@@ -37,6 +40,10 @@ const io = new Server(server, {
     credentials: true
   }
 });
+
+// Make io instance available to the controllers
+app.set('io', io);
+app.set('onlineUsers', onlineUsers);
 
 // THEN add middleware
 app.use(cors({
@@ -72,9 +79,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 
-// Socket.IO event handlers
-const onlineUsers = new Map();
-
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
   
@@ -86,15 +90,26 @@ io.on('connection', (socket) => {
   });
   
   // Handle sending messages
-  socket.on('sendMessage', ({ senderId, receiverId, content }) => {
+  socket.on('sendMessage', async ({ senderId, receiverId, content }) => {
     const receiverSocketId = onlineUsers.get(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit('getMessage', {
-        senderId,
-        content,
-        timestamp: new Date().toISOString()
-      });
-      console.log(`Message sent to ${receiverId}`);
+    
+    try {
+      // Get sender info for better notifications
+      const User = (await import('./models/User.js')).default;
+      const sender = await User.findById(senderId).select('fullName');
+      const senderName = sender ? sender.fullName : 'Someone';
+      
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('getMessage', {
+          senderId,
+          senderName,
+          content,
+          timestamp: new Date().toISOString()
+        });
+        console.log(`Message sent to ${receiverId}`);
+      }
+    } catch (error) {
+      console.error('Error in sendMessage socket handler:', error);
     }
   });
   

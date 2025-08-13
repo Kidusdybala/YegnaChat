@@ -55,7 +55,7 @@ export async function createOrGetStreamChat(req, res) {
     // Check if users are friends
     const currentUser = await User.findById(currentUserId);
     console.log(` Current user friends:`, currentUser.friends);
-    console.log(`🤝 Checking if ${userId} is in friends list:`, currentUser.friends.includes(userId));
+    console.log(` Checking if ${userId} is in friends list:`, currentUser.friends.includes(userId));
 
     if (!currentUser.friends.includes(userId)) {
       console.log(` Users are not friends. Current user: ${currentUserId}, Target user: ${userId}`);
@@ -135,17 +135,37 @@ export async function createOrGetChat(req, res) {
       return res.status(403).json({ message: "You can only chat with friends. Please send and accept a friend request first." });
     }
 
-    // Find existing chat or create new one
-    let chat = await Chat.findOne({
+    // Find all chats between these users (there might be duplicates)
+    const existingChats = await Chat.find({
       participants: { $all: [currentUserId, userId] }
-    }).populate('participants', 'fullName profilePic');
+    }).sort({ updatedAt: -1 });
 
-    if (!chat) {
+    let chat;
+    
+    if (existingChats.length > 0) {
+      // Use the most recent chat
+      chat = existingChats[0];
+      
+      // If there are duplicates, clean them up
+      if (existingChats.length > 1) {
+        console.log(`Found ${existingChats.length} duplicate chats between users ${currentUserId} and ${userId}, cleaning up...`);
+        
+        // Keep the first (most recent) chat and delete the rest
+        const chatsToDelete = existingChats.slice(1).map(c => c._id);
+        
+        // Delete the duplicate chats
+        await Chat.deleteMany({ _id: { $in: chatsToDelete } });
+        console.log(`Deleted ${chatsToDelete.length} duplicate chats`);
+      }
+    } else {
+      // Create a new chat if none exists
       chat = await Chat.create({
         participants: [currentUserId, userId]
       });
-      chat = await Chat.findById(chat._id).populate('participants', 'fullName profilePic');
     }
+    
+    // Populate the chat with participant details
+    chat = await Chat.findById(chat._id).populate('participants', 'fullName profilePic');
 
     console.log(` Chat created/found: ${chat._id}`);
     res.status(200).json({ chat });
@@ -166,10 +186,29 @@ export async function getChatMessages(req, res) {
       return res.status(403).json({ message: "Access denied" });
     }
 
+    // Get messages
     const messages = await Message.find({ chat: chatId })
       .populate('sender', 'fullName profilePic')
       .sort({ createdAt: 1 })
       .limit(50);
+
+    // Mark messages as read in the background
+    // This won't block the response
+    Message.updateMany(
+      { 
+        chat: chatId,
+        sender: { $ne: currentUserId }, // Only mark messages from others as read
+        readBy: { $ne: currentUserId } // Only update if not already read
+      },
+      { 
+        $addToSet: { readBy: currentUserId },
+        $set: { status: "read" }
+      }
+    ).then(result => {
+      console.log(`Marked ${result.modifiedCount} messages as read in chat ${chatId}`);
+    }).catch(err => {
+      console.error("Error marking messages as read:", err);
+    });
 
     res.status(200).json({ messages });
   } catch (error) {
@@ -190,14 +229,19 @@ export async function sendMessage(req, res) {
       return res.status(403).json({ message: "Access denied" });
     }
 
+    // Create the message with the sender automatically added to readBy
     const message = await Message.create({
       chat: chatId,
       sender: currentUserId,
-      content
+      content,
+      readBy: [currentUserId] // Sender has read their own message
     });
 
-    // Update chat's last message
-    await Chat.findByIdAndUpdate(chatId, { lastMessage: message._id });
+    // Update chat's last message and updatedAt timestamp
+    await Chat.findByIdAndUpdate(chatId, { 
+      lastMessage: message._id,
+      updatedAt: new Date()
+    });
 
     const populatedMessage = await Message.findById(message._id)
       .populate('sender', 'fullName profilePic');
@@ -212,55 +256,182 @@ export async function sendMessage(req, res) {
 export async function getUserChats(req, res) {
   try {
     const currentUserId = req.user.id;
+    console.log(`Getting chats for user: ${currentUserId}`);
 
-    const chats = await Chat.find({
+    // Get all chats for the current user
+    let chats = await Chat.find({
       participants: currentUserId
     })
     .populate('participants', 'fullName profilePic')
-    .populate('lastMessage')
+    .populate({
+      path: 'lastMessage',
+      populate: {
+        path: 'sender',
+        select: 'fullName profilePic'
+      }
+    })
     .sort({ updatedAt: -1 });
 
-    res.status(200).json({ chats });
+    console.log(`Found ${chats.length} chats for user: ${currentUserId}`);
+    
+    // Check for duplicate chats and clean them up automatically
+    const uniqueParticipantSets = new Map();
+    const chatsToKeep = [];
+    const chatsToDelete = [];
+    
+    // First pass: identify the most recent chat for each unique participant combination
+    chats.forEach(chat => {
+      // Create a unique key for each chat based on participant IDs
+      const participantIds = chat.participants
+        .map(p => p._id.toString())
+        .sort()
+        .join('-');
+      
+      if (!uniqueParticipantSets.has(participantIds)) {
+        // This is the first (most recent) chat we've seen with these participants
+        uniqueParticipantSets.set(participantIds, chat);
+        chatsToKeep.push(chat);
+      } else {
+        // We already have a more recent chat with these participants
+        chatsToDelete.push(chat._id);
+      }
+    });
+    
+    // If we found duplicates, delete them from the database
+    if (chatsToDelete.length > 0) {
+      console.log(`Found ${chatsToDelete.length} duplicate chats, cleaning up...`);
+      await Chat.deleteMany({ _id: { $in: chatsToDelete } });
+      console.log(`Deleted ${chatsToDelete.length} duplicate chats`);
+    }
+    
+    // Return only the unique chats
+    res.status(200).json({ chats: chatsToKeep });
   } catch (error) {
     console.log("Error in getUserChats controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
-// Add this function to your existing chat.controller.js file
-
 export async function getMessagesBetweenUsers(req, res) {
   try {
     const { targetUserId } = req.params;
     const currentUserId = req.user.id;
-    
-    // Find or create a chat between these users
-    let chat = await Chat.findOne({
+
+    // Find all chats between these users (there might be duplicates)
+    const chats = await Chat.find({
       participants: { $all: [currentUserId, targetUserId] }
-    });
-    
-    if (!chat) {
-      // Create a new chat if it doesn't exist
-      chat = await Chat.create({
-        participants: [currentUserId, targetUserId]
-      });
+    }).sort({ updatedAt: -1 });
+
+    if (!chats || chats.length === 0) {
+      return res.status(404).json({ message: "Chat not found" });
     }
+
+    // If there are multiple chats, use the most recent one
+    const chat = chats[0];
     
+    // If there are duplicates, clean them up
+    if (chats.length > 1) {
+      console.log(`Found ${chats.length} duplicate chats between users ${currentUserId} and ${targetUserId}, cleaning up...`);
+      
+      // Keep the first (most recent) chat and delete the rest
+      const chatsToDelete = chats.slice(1).map(c => c._id);
+      
+      // Delete the duplicate chats
+      await Chat.deleteMany({ _id: { $in: chatsToDelete } });
+      console.log(`Deleted ${chatsToDelete.length} duplicate chats`);
+    }
+
     // Get messages for this chat
     const messages = await Message.find({ chat: chat._id })
-      .sort({ createdAt: 1 })
-      .populate('sender', 'fullName profilePic');
-    
-    // Format messages for the frontend
-    const formattedMessages = messages.map(msg => ({
-      senderId: msg.sender._id,
-      content: msg.content,
-      timestamp: msg.createdAt
-    }));
-    
-    res.status(200).json({ messages: formattedMessages });
+      .populate('sender', 'fullName profilePic')
+      .sort({ createdAt: 1 });
+      
+    // Mark messages as read in the background
+    // This won't block the response
+    Message.updateMany(
+      { 
+        chat: chat._id,
+        sender: { $ne: currentUserId }, // Only mark messages from others as read
+        readBy: { $ne: currentUserId } // Only update if not already read
+      },
+      { 
+        $addToSet: { readBy: currentUserId },
+        $set: { status: "read" }
+      }
+    ).then(result => {
+      console.log(`Marked ${result.modifiedCount} messages as read in chat between ${currentUserId} and ${targetUserId}`);
+    }).catch(err => {
+      console.error("Error marking messages as read:", err);
+    });
+
+    res.status(200).json({ messages });
   } catch (error) {
-    console.error("Error in getMessagesBetweenUsers:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.log("Error in getMessagesBetweenUsers controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+// Get unread messages count for the current user
+export async function getUnreadMessagesCount(req, res) {
+  try {
+    const currentUserId = req.user.id;
+    
+    // Get all chats for the current user
+    const userChats = await Chat.find({
+      participants: currentUserId
+    });
+    
+    const chatIds = userChats.map(chat => chat._id);
+    
+    // Find all messages in these chats where the current user is not in the readBy array
+    const unreadMessages = await Message.countDocuments({
+      chat: { $in: chatIds },
+      sender: { $ne: currentUserId }, // Don't count messages sent by the current user
+      readBy: { $ne: currentUserId } // Current user hasn't read the message
+    });
+    
+    console.log(`Found ${unreadMessages} unread messages for user ${currentUserId}`);
+    
+    res.status(200).json({ count: unreadMessages });
+  } catch (error) {
+    console.log("Error in getUnreadMessagesCount controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+// Mark messages as read
+export async function markMessagesAsRead(req, res) {
+  try {
+    const { chatId } = req.params;
+    const currentUserId = req.user.id;
+    
+    // Verify user is part of this chat
+    const chat = await Chat.findById(chatId);
+    if (!chat || !chat.participants.includes(currentUserId)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    // Mark all messages in this chat as read by the current user
+    const updateResult = await Message.updateMany(
+      { 
+        chat: chatId,
+        sender: { $ne: currentUserId }, // Only mark messages from others as read
+        readBy: { $ne: currentUserId } // Only update if not already read
+      },
+      { 
+        $addToSet: { readBy: currentUserId },
+        $set: { status: "read" }
+      }
+    );
+    
+    console.log(`Marked ${updateResult.modifiedCount} messages as read in chat ${chatId}`);
+    
+    res.status(200).json({ 
+      message: `Marked ${updateResult.modifiedCount} messages as read`,
+      modifiedCount: updateResult.modifiedCount
+    });
+  } catch (error) {
+    console.log("Error in markMessagesAsRead controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 }
