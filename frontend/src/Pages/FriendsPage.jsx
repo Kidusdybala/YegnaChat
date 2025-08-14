@@ -179,35 +179,35 @@ const FriendsPage = () => {
     <div className="min-h-screen bg-base-100">
       {/* Header */}
       <div className="bg-base-100 border-b border-base-300 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-base-content">Friends</h1>
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-base-content">Friends</h1>
             
             {/* Suggested Friends Dropdown Button */}
             <div className="relative">
               <button 
-                className="btn btn-ghost btn-circle"
+                className="btn btn-ghost btn-circle btn-sm sm:btn-md"
                 onClick={() => setShowSuggestedDropdown(!showSuggestedDropdown)}
               >
-                <UserPlusIcon className="w-5 h-5" />
+                <UserPlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               {/* Suggested Friends Dropdown */}
               {showSuggestedDropdown && (
-                <div className="absolute right-0 mt-2 w-80 bg-base-100 rounded-lg shadow-xl border border-base-300 z-50">
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-3">Friend Suggestions</h3>
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-base-100 rounded-lg shadow-xl border border-base-300 z-50">
+                  <div className="p-3 sm:p-4">
+                    <h3 className="font-semibold text-base sm:text-lg mb-3">Friend Suggestions</h3>
+                    <div className="space-y-2 sm:space-y-3 max-h-80 sm:max-h-96 overflow-y-auto">
                       {suggestedFriends?.slice(0, 5).map((user) => {
                         const requestSent = hasSentRequestTo(user._id);
                         return (
-                          <div key={user._id} className="flex items-center space-x-3">
+                          <div key={user._id} className="flex items-center space-x-2 sm:space-x-3">
                             <div className="avatar">
-                              <div className="w-10 h-10 rounded-full">
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full">
                                 {getProfilePictureUrl(user) ? (
                                   <img src={getProfilePictureUrl(user)} alt={user.fullName} className="rounded-full object-cover" />
                                 ) : (
-                                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-content font-semibold">
+                                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary flex items-center justify-center text-primary-content font-semibold text-xs sm:text-sm">
                                     {getUserInitials(user)}
                                   </div>
                                 )}
@@ -244,39 +244,39 @@ const FriendsPage = () => {
           {/* Search Bar */}
           <div className="relative max-w-md mx-auto">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-base-content opacity-50" />
+              <Search className="h-4 w-4 sm:h-5 sm:w-5 text-base-content opacity-50" />
             </div>
             <input
               type="text"
               placeholder="Search friends and people..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input input-bordered w-full pl-10 pr-4"
+              className="input input-bordered w-full pl-9 sm:pl-10 pr-4 text-sm sm:text-base"
             />
             {isSearching && (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <div className="loading loading-spinner loading-sm"></div>
+                <div className="loading loading-spinner loading-xs sm:loading-sm"></div>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="max-w-6xl mx-auto p-3 sm:p-4 lg:p-6 pb-20 lg:pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
           
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-base-100 rounded-lg shadow-sm border border-base-300 p-4">
-              <div className="space-y-2">
+            <div className="bg-base-100 rounded-lg shadow-sm border border-base-300 p-3 sm:p-4">
+              <div className="space-y-1 sm:space-y-2">
                 <button
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center space-x-3 ${
+                  className={`w-full text-left px-3 py-2 sm:px-4 sm:py-3 rounded-lg transition-colors flex items-center space-x-2 sm:space-x-3 ${
                     activeTab === 'requests' ? 'bg-primary text-primary-content' : 'hover:bg-base-200 text-base-content'
                   }`}
                   onClick={() => setActiveTab('requests')}
                 >
-                  <UserPlusIcon className="w-5 h-5" />
-                  <span className="font-medium">Friend Requests</span>
+                  <UserPlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="font-medium text-sm sm:text-base">Friend Requests</span>
                   {friendRequests?.incomingReqs?.length > 0 && (
                     <div className="badge badge-error text-white text-xs ml-auto">
                       {friendRequests.incomingReqs.length}
@@ -285,24 +285,24 @@ const FriendsPage = () => {
                 </button>
                 
                 <button
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center space-x-3 ${
+                  className={`w-full text-left px-3 py-2 sm:px-4 sm:py-3 rounded-lg transition-colors flex items-center space-x-2 sm:space-x-3 touch-target ${
                     activeTab === 'friends' ? 'bg-primary text-primary-content' : 'hover:bg-base-200 text-base-content'
                   }`}
                   onClick={() => setActiveTab('friends')}
                 >
-                  <Users className="w-5 h-5" />
-                  <span className="font-medium">All Friends</span>
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm sm:text-base">All Friends</span>
                   <span className="text-xs ml-auto opacity-70">{friends?.length || 0}</span>
                 </button>
                 
                 <button
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center space-x-3 ${
+                  className={`w-full text-left px-3 py-2 sm:px-4 sm:py-3 rounded-lg transition-colors flex items-center space-x-2 sm:space-x-3 touch-target ${
                     activeTab === 'suggested' ? 'bg-primary text-primary-content' : 'hover:bg-base-200 text-base-content'
                   }`}
                   onClick={() => setActiveTab('suggested')}
                 >
-                  <UserIcon className="w-5 h-5" />
-                  <span className="font-medium">Suggestions</span>
+                  <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm sm:text-base">Suggestions</span>
                 </button>
               </div>
             </div>

@@ -1,16 +1,47 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useAuthUser from '../hooks/useAuthUser';
 import { toast } from 'react-hot-toast';
+import { useMutation } from '@tanstack/react-query';
+import axiosInstance from '../lib/axios';
 
 export const SignUpPage = () => {
-  const { signup, isSignupPending, signupError } = useAuthUser();
+  const navigate = useNavigate();
   const [formErrors, setFormErrors] = useState({});
   const [signupData, setSignupData] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
+  });
+
+  // Signup mutation that sends verification email
+  const signupMutation = useMutation({
+    mutationFn: async (userData) => {
+      const response = await axiosInstance.post('/auth/signup', userData);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      if (data.emailSent) {
+        toast.success('Verification email sent! Please check your inbox.');
+        localStorage.setItem('pendingVerificationEmail', signupData.email);
+        navigate(`/verify-email?email=${encodeURIComponent(signupData.email)}`);
+      } else if (data.emailError) {
+        toast.error('Account created but email failed to send. Please try resending verification code.');
+        localStorage.setItem('pendingVerificationEmail', signupData.email);
+        navigate(`/verify-email?email=${encodeURIComponent(signupData.email)}`);
+      }
+    },
+    onError: (error) => {
+      const errorMessage = error?.response?.data?.message || 'Signup failed';
+      toast.error(errorMessage);
+      
+      // If it's an email error but account was created, redirect to verification
+      if (error?.response?.data?.emailError) {
+        localStorage.setItem('pendingVerificationEmail', signupData.email);
+        navigate(`/verify-email?email=${encodeURIComponent(signupData.email)}`);
+      }
+    }
   });
 
   // Validate form fields
@@ -53,7 +84,7 @@ export const SignUpPage = () => {
     
     // Remove confirmPassword before sending to API
     const { confirmPassword, ...dataToSubmit } = signupData;
-    signup(dataToSubmit);
+    signupMutation.mutate(dataToSubmit);
   };
 
   return (
@@ -73,9 +104,9 @@ export const SignUpPage = () => {
           </div>
 
           {/* ERROR MESSAGE IF ANY */}
-          {signupError && signupError.response?.data?.message && (
+          {signupMutation.error && signupMutation.error.response?.data?.message && (
             <div className="alert alert-error mb-4">
-              <span>{signupError.response.data.message}</span>
+              <span>{signupMutation.error.response.data.message}</span>
             </div>
           )}
 
@@ -188,11 +219,11 @@ export const SignUpPage = () => {
                 </div>
 
                 {/* SUBMIT BUTTON */}
-                <button className="btn btn-primary w-full" type="submit">
-                  {isSignupPending ? (
+                <button className="btn btn-primary w-full" type="submit" disabled={signupMutation.isPending}>
+                  {signupMutation.isPending ? (
                     <>
                       <span className="loading loading-spinner loading-xs"></span>
-                      Loading...
+                      Creating Account...
                     </>
                   ) : (
                     'Create Account'

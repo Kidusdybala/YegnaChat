@@ -27,10 +27,10 @@ const NotificationsPage = () => {
   const acceptedRequests = friendRequests?.acceptedReqs || [];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="container mx-auto max-w-4xl space-y-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Notifications</h1>
+    <div className="p-3 sm:p-4 lg:p-6 pb-20 lg:pb-6 overflow-y-auto h-full">
+      <div className="container mx-auto max-w-4xl space-y-6 sm:space-y-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Notifications</h1>
           <button 
             onClick={() => refetch()} 
             className="btn btn-sm btn-ghost btn-circle"
@@ -48,38 +48,38 @@ const NotificationsPage = () => {
         ) : (
           <>
             {incomingRequests.length > 0 && (
-              <section className="space-y-4">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <UserCheckIcon className="h-5 w-5 text-primary" />
-                  Friend Requests
-                  <span className="badge badge-primary ml-2">{incomingRequests.length}</span>
+              <section className="space-y-3 sm:space-y-4">
+                <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                  <UserCheckIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <span>Friend Requests</span>
+                  <span className="badge badge-primary text-xs sm:text-sm ml-2">{incomingRequests.length}</span>
                 </h2>
 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {incomingRequests.map((request) => (
                     <div
                       key={request._id}
                       className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow"
                     >
-                      <div className="card-body p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="avatar w-14 h-14 rounded-full bg-base-300">
+                      <div className="card-body p-3 sm:p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="avatar w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-base-300 flex-shrink-0">
                               {request.sender?.profilePic ? (
-                                <img src={request.sender.profilePic} alt={request.sender.fullName} />
+                                <img src={request.sender.profilePic} alt={request.sender.fullName} className="rounded-full object-cover" />
                               ) : (
-                                <div className="flex items-center justify-center h-full w-full text-xl font-bold">
+                                <div className="flex items-center justify-center h-full w-full text-lg sm:text-xl font-bold">
                                   {request.sender?.fullName?.charAt(0) || '?'}
                                 </div>
                               )}
                             </div>
-                            <div>
-                              <h3 className="font-semibold">{request.sender?.fullName}</h3>
-                              <div className="flex flex-wrap gap-1.5 mt-1">
-                                <span className="badge badge-secondary badge-sm">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-sm sm:text-base truncate">{request.sender?.fullName}</h3>
+                              <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-1">
+                                <span className="badge badge-secondary badge-xs sm:badge-sm">
                                   Native: {request.sender?.nativeLanguage}
                                 </span>
-                                <span className="badge badge-outline badge-sm">
+                                <span className="badge badge-outline badge-xs sm:badge-sm">
                                   Learning: {request.sender?.learningLanguage}
                                 </span>
                               </div>
@@ -87,7 +87,7 @@ const NotificationsPage = () => {
                           </div>
 
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn btn-primary btn-sm w-full sm:w-auto flex-shrink-0"
                             onClick={() => acceptRequestMutation(request._id)}
                             disabled={isPending}
                           >

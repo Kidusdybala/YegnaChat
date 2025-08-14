@@ -122,9 +122,9 @@ export const LoginPage = () => {
                       <input type="checkbox" className="checkbox checkbox-sm" />
                       <span className="text-xs">Remember me</span>
                     </label>
-                    <span className="text-xs text-primary hover:underline cursor-pointer">
+                    <Link to="/forgot-password" className="text-xs text-primary hover:underline">
                       Forgot password?
-                    </span>
+                    </Link>
                   </div>
                 </div>
 

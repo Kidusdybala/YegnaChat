@@ -63,13 +63,13 @@ const ChatList = () => {
 
   if (!chats || chats.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-        <MessageCircleIcon className="w-16 h-16 text-base-content opacity-20 mb-4" />
-        <h3 className="font-semibold text-lg">No conversations yet</h3>
-        <p className="text-sm text-base-content opacity-60 mb-4">
+      <div className="flex flex-col items-center justify-center h-full p-3 sm:p-4 text-center">
+        <MessageCircleIcon className="w-12 h-12 sm:w-16 sm:h-16 text-base-content opacity-20 mb-4" />
+        <h3 className="font-semibold text-base sm:text-lg">No conversations yet</h3>
+        <p className="text-xs sm:text-sm text-base-content opacity-60 mb-4">
           Start chatting with your friends
         </p>
-        <Link to="/friends" className="btn btn-sm btn-primary">
+        <Link to="/friends" className="btn btn-xs sm:btn-sm btn-primary">
           Find Friends to Chat With
         </Link>
       </div>
@@ -78,9 +78,9 @@ const ChatList = () => {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Recent Chats</h2>
+      <div className="p-3 sm:p-4">
+        <div className="flex justify-between items-center mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl font-bold">Recent Chats</h2>
           <div className="flex gap-2">
             <button 
               onClick={() => refetch()} 
@@ -88,7 +88,7 @@ const ChatList = () => {
               disabled={isLoading}
               title="Refresh chats"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
@@ -103,14 +103,14 @@ const ChatList = () => {
               <div
                 key={chat._id}
                 onClick={() => handleChatClick(otherUser._id)}
-                className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
+                className={`flex items-center p-2 sm:p-3 rounded-lg cursor-pointer transition-colors ${
                   isActive 
                     ? 'bg-primary bg-opacity-20' 
                     : 'hover:bg-base-200'
                 }`}
               >
                 <div className="avatar">
-                  <div className="w-12 rounded-full">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full">
                     {otherUser.profilePic ? (
                       <img
                         src={getProfilePictureUrl(otherUser) || '/default-avatar.png'}
@@ -121,25 +121,25 @@ const ChatList = () => {
                         }}
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm sm:text-base">
                         {getUserInitials(otherUser)}
                       </div>
                     )}
                   </div>
                 </div>
                 
-                <div className="ml-3 flex-1 overflow-hidden">
+                <div className="ml-2 sm:ml-3 flex-1 overflow-hidden min-w-0">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-semibold truncate">{otherUser.fullName}</h3>
+                    <h3 className="font-semibold truncate text-sm sm:text-base">{otherUser.fullName}</h3>
                     {chat.lastMessage && chat.lastMessage.createdAt && (
-                      <span className="text-xs opacity-60">
+                      <span className="text-xs opacity-60 ml-2 flex-shrink-0">
                         {formatTime(chat.lastMessage.createdAt)}
                       </span>
                     )}
                   </div>
                   
                   {chat.lastMessage && typeof chat.lastMessage.content === 'string' ? (
-                    <p className="text-sm opacity-70 truncate">
+                    <p className="text-xs sm:text-sm opacity-70 truncate">
                       {chat.lastMessage.content.startsWith('/uploads/') 
                         ? '🖼️ Image' 
                         : chat.lastMessage.content}

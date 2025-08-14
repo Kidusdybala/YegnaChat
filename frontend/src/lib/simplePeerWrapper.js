@@ -1,6 +1,5 @@
 // A wrapper for simple-peer to handle browser compatibility issues
 import SimplePeer from 'simple-peer';
-
 // Create a wrapper function that initializes SimplePeer with the correct options
 export function createPeer(options = {}) {
   try {

@@ -149,31 +149,31 @@ const EditProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-base-200 flex items-center justify-center p-3 sm:p-4 lg:p-6">
       <div className="card w-full max-w-md bg-base-100 shadow-xl">
-        <div className="card-body">
-          <div className="flex items-center justify-center mb-4">
+        <div className="card-body p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-4 sm:mb-6">
             <img
               src="/Logo.png"
               alt="YegnaChat Logo"
-              className="w-12 h-12"
+              className="w-10 h-10 sm:w-12 sm:h-12 mb-2 sm:mb-0"
               onError={(e) => {
                 console.warn('Logo failed to load');
                 e.target.style.display = 'none';
               }}
             />
-            <h2 className="card-title text-2xl ml-2">Complete Your Profile</h2>
+            <h2 className="card-title text-lg sm:text-xl lg:text-2xl sm:ml-2 text-center sm:text-left">Complete Your Profile</h2>
           </div>
 
           <form onSubmit={handleSubmit}>
             {/* Profile Picture */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Profile Picture</label>
-              <div className="flex justify-center mb-4">
+            <div className="mb-4 sm:mb-6">
+              <label className="block text-sm sm:text-base font-medium mb-2">Profile Picture</label>
+              <div className="flex justify-center mb-3 sm:mb-4">
                 {profile.profilePic ? (
                   <div className="relative">
                     <div className="avatar">
-                      <div className="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
                         <img
                           src={profile.profilePic}
                           alt="Selected profile"
@@ -187,17 +187,17 @@ const EditProfile = () => {
                         />
                       </div>
                       <div
-                        className="w-24 h-24 rounded-full bg-neutral-focus text-neutral-content flex items-center justify-center ring ring-primary ring-offset-base-100 ring-offset-2"
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-neutral-focus text-neutral-content flex items-center justify-center ring ring-primary ring-offset-base-100 ring-offset-2"
                         style={{ display: 'none' }}
                       >
-                        <span className="text-2xl font-semibold">
+                        <span className="text-xl sm:text-2xl font-semibold">
                           {profile.fullName.charAt(0).toUpperCase() || '?'}
                         </span>
                       </div>
                     </div>
                     <button
                       type="button"
-                      className="btn btn-circle btn-xs absolute top-0 right-0 bg-error text-white border-none"
+                      className="btn btn-circle btn-xs sm:btn-sm absolute -top-1 -right-1 bg-error text-white border-none touch-target"
                       onClick={removeProfilePicture}
                     >
                       ✕
@@ -205,8 +205,8 @@ const EditProfile = () => {
                   </div>
                 ) : (
                   <div className="avatar placeholder">
-                    <div className="bg-neutral-focus text-neutral-content rounded-full w-24">
-                      <span className="text-3xl">{profile.fullName.charAt(0).toUpperCase() || '?'}</span>
+                    <div className="bg-neutral-focus text-neutral-content rounded-full w-20 h-20 sm:w-24 sm:h-24">
+                      <span className="text-2xl sm:text-3xl">{profile.fullName.charAt(0).toUpperCase() || '?'}</span>
                     </div>
                   </div>
                 )}
@@ -214,16 +214,16 @@ const EditProfile = () => {
 
               <div className="form-control w-full">
                 <label className="label">
-                  <span className="label-text">Upload profile picture</span>
+                  <span className="label-text text-sm sm:text-base">Upload profile picture</span>
                 </label>
                 <input
                   type="file"
                   accept="image/*"
-                  className="file-input file-input-bordered w-full"
+                  className="file-input file-input-bordered w-full text-sm sm:text-base"
                   onChange={handleFileUpload}
                 />
                 <label className="label">
-                  <span className="label-text-alt">
+                  <span className="label-text-alt text-xs sm:text-sm">
                     Images are automatically compressed and resized (max 10MB, optimized to 400px)
                   </span>
                 </label>
@@ -231,9 +231,9 @@ const EditProfile = () => {
             </div>
 
             {/* Full Name */}
-            <div className="form-control mb-4">
+            <div className="form-control mb-3 sm:mb-4">
               <label className="label">
-                <span className="label-text">Full Name</span>
+                <span className="label-text text-sm sm:text-base">Full Name</span>
               </label>
               <input
                 type="text"
@@ -241,31 +241,31 @@ const EditProfile = () => {
                 value={profile.fullName}
                 onChange={handleChange}
                 placeholder="Enter your full name"
-                className="input input-bordered"
+                className="input input-bordered text-sm sm:text-base"
                 required
               />
             </div>
 
             {/* Bio */}
-            <div className="form-control mb-4">
+            <div className="form-control mb-4 sm:mb-6">
               <label className="label">
-                <span className="label-text">Bio</span>
+                <span className="label-text text-sm sm:text-base">Bio</span>
               </label>
               <textarea
                 name="bio"
                 value={profile.bio}
                 onChange={handleChange}
                 placeholder="Tell us about yourself"
-                className="textarea textarea-bordered h-24"
+                className="textarea textarea-bordered h-20 sm:h-24 text-sm sm:text-base resize-none"
                 required
               ></textarea>
             </div>
 
             {/* Save Button */}
-            <div className="form-control mt-6">
+            <div className="form-control mt-4 sm:mt-6">
               <button
                 type="submit"
-                className={`btn btn-primary ${loading ? 'loading' : ''}`}
+                className={`btn btn-primary w-full touch-target ${loading ? 'loading' : ''}`}
                 disabled={loading || updateProfile.isPending}
               >
                 {loading || updateProfile.isPending ? 'Saving...' : 'Save Profile'}

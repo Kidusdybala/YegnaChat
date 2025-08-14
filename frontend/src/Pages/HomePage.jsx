@@ -115,17 +115,17 @@ const HomePage = () => {
     <div className="min-h-screen bg-base-200">
       {/* Header */}
       <div className="bg-base-100 border-b border-base-300 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-base-content">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+          <div className="flex items-start sm:items-center justify-between mb-3 sm:mb-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-base-content truncate">
                 Welcome back, {authUser?.fullName?.split(' ')[0] || 'User'}! 👋
               </h1>
-              <p className="text-base-content opacity-70">Stay updated with the latest news</p>
+              <p className="text-sm sm:text-base text-base-content opacity-70">Stay updated with the latest news</p>
             </div>
             <button 
               onClick={() => refetch()} 
-              className="btn btn-ghost btn-circle"
+              className="btn btn-ghost btn-circle btn-sm sm:btn-md flex-shrink-0 ml-2"
               disabled={isLoading}
               title="Refresh news"
             >
@@ -134,21 +134,21 @@ const HomePage = () => {
           </div>
 
           {/* Category Tabs */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1 sm:gap-2">
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`btn btn-sm gap-2 ${
+                  className={`btn btn-xs sm:btn-sm gap-1 sm:gap-2 ${
                     activeTab === tab.id 
                       ? 'btn-primary' 
                       : 'btn-ghost hover:btn-outline'
                   }`}
                 >
-                  <IconComponent className="w-4 h-4" />
-                  {tab.label}
+                  <IconComponent className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm">{tab.label}</span>
                 </button>
               );
             })}
@@ -157,14 +157,14 @@ const HomePage = () => {
       </div>
 
       {/* News Feed */}
-      <div className="max-w-6xl mx-auto p-4">
+      <div className="max-w-6xl mx-auto p-3 sm:p-4 lg:p-6 pb-20 lg:pb-6">
         {isLoading ? (
           // Loading state
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[...Array(12)].map((_, i) => (
-              <div key={i} className="bg-base-100 rounded-lg border border-base-300 p-4">
+              <div key={i} className="bg-base-100 rounded-lg border border-base-300 p-3 sm:p-4">
                 <div className="animate-pulse">
-                  <div className="h-48 bg-base-300 rounded-lg mb-4"></div>
+                  <div className="h-40 sm:h-48 bg-base-300 rounded-lg mb-4"></div>
                   <div className="h-4 bg-base-300 rounded mb-2"></div>
                   <div className="h-4 bg-base-300 rounded w-3/4 mb-2"></div>
                   <div className="h-3 bg-base-300 rounded w-1/2"></div>
@@ -175,7 +175,7 @@ const HomePage = () => {
         ) : filteredArticles.length > 0 ? (
           <div>
             {/* News Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {visibleArticles.map((article, index) => (
                 <NewsCard 
                   key={`${article.url}-${index}`} 

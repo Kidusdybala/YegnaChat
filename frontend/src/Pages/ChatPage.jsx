@@ -200,15 +200,15 @@ const ChatPage = () => {
   // If no chat is selected, show the chat list in a centered layout
   if (!targetUserId) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 h-[calc(100vh-4rem)]">
-        <div className="md:col-span-1 border-r border-base-300 h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
+        <div className="lg:col-span-1 border-r border-base-300 h-full">
           <ChatList />
         </div>
-        <div className="hidden md:flex md:col-span-2 items-center justify-center bg-base-100">
-          <div className="text-center">
-            <MessageCircle className="w-16 h-16 mx-auto text-base-content opacity-20 mb-4" />
-            <h2 className="text-xl font-semibold text-base-content">Select a conversation</h2>
-            <p className="text-base-content opacity-60 mt-2">
+        <div className="hidden lg:flex lg:col-span-2 items-center justify-center bg-base-100">
+          <div className="text-center p-6">
+            <MessageCircle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-base-content opacity-20 mb-4" />
+            <h2 className="text-lg sm:text-xl font-semibold text-base-content">Select a conversation</h2>
+            <p className="text-sm sm:text-base text-base-content opacity-60 mt-2">
               Choose a chat from the sidebar to start messaging
             </p>
           </div>
@@ -219,12 +219,12 @@ const ChatPage = () => {
   
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 h-[calc(100vh-4rem)]">
-        <div className="md:col-span-1 border-r border-base-300 h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
+        <div className="hidden lg:block lg:col-span-1 border-r border-base-300 h-full">
           <ChatList />
         </div>
-        <div className="md:col-span-2 flex items-center justify-center bg-base-100">
-          <div className="text-center">
+        <div className="col-span-1 lg:col-span-2 flex items-center justify-center bg-base-100">
+          <div className="text-center p-6">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-base-content">Loading chat...</p>
           </div>
@@ -234,96 +234,106 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 h-[calc(100vh-4rem)] bg-base-100">
-      <div className="hidden md:block md:col-span-1 border-r border-base-300 h-full">
+    <div className="grid grid-cols-1 lg:grid-cols-3 h-full bg-base-100">
+      <div className="hidden lg:block lg:col-span-1 border-r border-base-300 h-full">
         <ChatList />
       </div>
       
-      <div className="col-span-1 md:col-span-2 flex flex-col h-full">
+      <div className="col-span-1 lg:col-span-2 flex flex-col h-full relative">
         {/* Show VideoCall component when showVideoCall is true */}
         {showVideoCall && targetUser && (
           <VideoCall targetUser={targetUser} onEndCall={handleEndCall} />
         )}
         
         {/* Chat Header */}
-        <div className="bg-primary px-6 py-4 flex items-center justify-between text-primary-content shadow-md">
+        <div className="bg-primary px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex items-center justify-between text-primary-content shadow-md">
+          {/* Mobile back button */}
+          <button 
+            className="lg:hidden btn btn-ghost btn-circle btn-sm text-primary-content mr-2"
+            onClick={() => window.history.back()}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
           {/* Center section wrapper */}
-          <div className="flex-1 flex justify-center">
-            <div className="flex items-center space-x-3">
+          <div className="flex-1 flex justify-center lg:justify-center">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="avatar">
-                <div className="w-12 rounded-full">
+                <div className="w-8 sm:w-10 lg:w-12 rounded-full">
                   {getProfilePictureUrl(targetUser) ? (
                     <img
                       src={getProfilePictureUrl(targetUser)}
                       alt={targetUser?.fullName}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
+                      className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full object-cover border-2 border-white shadow-md"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
                       }}
                     />
                   ) : null}
-                  <div className="w-12 h-12 rounded-full bg-primary-content/20 flex items-center justify-center text-primary-content font-semibold border-2 border-primary-content/30 shadow-md" style={{display: getProfilePictureUrl(targetUser) ? 'none' : 'flex'}}>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full bg-primary-content/20 flex items-center justify-center text-primary-content font-semibold border-2 border-primary-content/30 shadow-md text-xs sm:text-sm lg:text-base" style={{display: getProfilePictureUrl(targetUser) ? 'none' : 'flex'}}>
                     {getUserInitials(targetUser)}
                   </div>
                 </div>
               </div>
-              <div className="text-center">
-                <h2 className="font-semibold text-primary-content">{targetUser?.fullName}</h2>
-                <p className="text-sm text-primary-content opacity-75">Online</p>
+              <div className="text-center min-w-0">
+                <h2 className="font-semibold text-primary-content text-sm sm:text-base lg:text-lg truncate">{targetUser?.fullName}</h2>
+                <p className="text-xs sm:text-sm text-primary-content opacity-75">Online</p>
               </div>
             </div>
           </div>
     
-          <div className="flex space-x-2">
-            <button className="p-2 hover:bg-primary-focus rounded-full transition-colors text-primary-content">
-              <Phone className="w-5 h-5" />
+          <div className="flex space-x-1 sm:space-x-2">
+            <button className="p-1.5 sm:p-2 hover:bg-primary-focus rounded-full transition-colors text-primary-content">
+              <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button 
-              className="p-2 hover:bg-primary-focus rounded-full transition-colors text-primary-content"
+              className="p-1.5 sm:p-2 hover:bg-primary-focus rounded-full transition-colors text-primary-content"
               onClick={handleVideoCall}
             >
-              <Video className="w-5 h-5" />
+              <Video className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
     
         {/* Messages - Telegram-style Layout: Sent messages on LEFT, Received messages on RIGHT */}
-        <div className="flex-1 overflow-y-auto px-4 py-2 bg-base-200">
+        <div className="flex-1 overflow-y-auto px-2 sm:px-3 lg:px-4 py-2 bg-base-200">
           {messages.map((message) => {
             const isMyMessage = message.sender._id === authUser._id;
             return (
               <div
                 key={message._id}
-                className={`flex mb-4 ${isMyMessage ? "justify-start" : "justify-end"}`}
+                className={`flex mb-3 sm:mb-4 ${isMyMessage ? "justify-start" : "justify-end"}`}
               >
-                <div className={`flex items-start space-x-2 max-w-[75%] ${isMyMessage ? "flex-row" : "flex-row-reverse space-x-reverse"}`}>
+                <div className={`flex items-start space-x-1.5 sm:space-x-2 max-w-[85%] sm:max-w-[75%] ${isMyMessage ? "flex-row" : "flex-row-reverse space-x-reverse"}`}>
                   {/* Avatar for received messages only */}
                   {!isMyMessage && (
                     <div className="flex-shrink-0 mt-1">
-                      <div className="w-8 h-8 rounded-full overflow-hidden">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden">
                         {getProfilePictureUrl(targetUser) ? (
                           <img
                             src={getProfilePictureUrl(targetUser)}
                             alt={targetUser?.fullName}
-                            className="w-8 h-8 object-cover"
+                            className="w-6 h-6 sm:w-8 sm:h-8 object-cover"
                             onError={(e) => {
                               e.target.style.display = 'none';
                               e.target.nextSibling.style.display = 'flex';
                             }}
                           />
                         ) : null}
-                        <div className="w-8 h-8 bg-primary flex items-center justify-center text-primary-content font-medium text-sm" style={{display: getProfilePictureUrl(targetUser) ? 'none' : 'flex'}}>
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary flex items-center justify-center text-primary-content font-medium text-xs sm:text-sm" style={{display: getProfilePictureUrl(targetUser) ? 'none' : 'flex'}}>
                           {getUserInitials(targetUser)}
                         </div>
                       </div>
                     </div>
                   )}
                   
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0">
                     {/* Message bubble */}
                     <div
-                      className={`relative px-4 py-2 rounded-2xl shadow-sm max-w-full ${isMyMessage
+                      className={`relative px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl shadow-sm max-w-full ${isMyMessage
                         ? "bg-primary text-primary-content rounded-bl-md"
                         : "bg-base-100 text-base-content border border-base-300 rounded-br-md"
                       }`}
@@ -334,12 +344,12 @@ const ChatPage = () => {
                           <img 
                             src={`http://localhost:5001${message.content}`} 
                             alt="Shared image" 
-                            className="max-w-full h-auto rounded-lg"
+                            className="max-w-full h-auto rounded-lg max-w-[280px] sm:max-w-xs"
                             loading="lazy"
                           />
                         </div>
                       ) : (
-                        <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                        <p className="text-xs sm:text-sm leading-relaxed break-words whitespace-pre-wrap">
                           {message.content}
                         </p>
                       )}
@@ -353,7 +363,7 @@ const ChatPage = () => {
                           })}
                         </span>
                         {isMyMessage && (
-                          <svg className="w-4 h-4 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 opacity-80" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
@@ -373,8 +383,8 @@ const ChatPage = () => {
         </div>
     
         {/* Message Input - Telegram Style */}
-        <div className="border-t border-base-300 bg-base-100 px-4 py-3">
-          <form onSubmit={sendMessage} className="flex items-end space-x-3">
+        <div className="border-t border-base-300 bg-base-100 px-2 sm:px-3 lg:px-4 py-2 sm:py-3 safe-area-inset-bottom flex-shrink-0">
+          <form onSubmit={sendMessage} className="flex items-end space-x-2 sm:space-x-3">
             {/* File Upload Button */}
             <input
               type="file"
@@ -386,9 +396,9 @@ const ChatPage = () => {
             />
             <label
               htmlFor="imageUpload"
-              className={`flex-shrink-0 p-2 text-base-content opacity-60 hover:text-primary cursor-pointer transition-colors rounded-full hover:bg-base-200 ${isUploading ? 'opacity-30' : ''}`}
+              className={`flex-shrink-0 p-1.5 sm:p-2 text-base-content opacity-60 hover:text-primary cursor-pointer transition-colors rounded-full hover:bg-base-200 touch-target min-w-[44px] min-h-[44px] flex items-center justify-center ${isUploading ? 'opacity-30' : ''}`}
             >
-              <Image className="w-5 h-5" />
+              <Image className="w-4 h-4 sm:w-5 sm:h-5" />
             </label>
 
             {/* Message Input Container */}
@@ -398,7 +408,8 @@ const ChatPage = () => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="w-full px-4 py-3 bg-base-200 border border-base-300 rounded-3xl text-sm text-base-content placeholder-base-content placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none max-h-32 leading-5"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-base-200 border border-base-300 rounded-2xl sm:rounded-3xl text-base text-base-content placeholder-base-content placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none max-h-24 sm:max-h-32 leading-5 touch-target"
+                style={{ fontSize: '16px' }} // Prevent zoom on iOS
                 disabled={isUploading}
               />
             </div>
@@ -407,16 +418,16 @@ const ChatPage = () => {
             <button
               type="submit"
               disabled={!newMessage.trim() || isUploading}
-              className={`flex-shrink-0 p-3 rounded-full transition-all duration-200 ${
+              className={`flex-shrink-0 p-2 sm:p-2.5 lg:p-3 rounded-full transition-all duration-200 touch-target min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 newMessage.trim() && !isUploading
                   ? 'bg-primary text-primary-content hover:bg-primary-focus scale-100'
                   : 'bg-base-300 text-base-content opacity-50 scale-95'
               }`}
             >
               {isUploading ? (
-                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </button>
           </form>

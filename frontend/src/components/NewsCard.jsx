@@ -32,10 +32,10 @@ const NewsCard = ({ article, category }) => {
   if (!article) return null;
 
   return (
-    <div className="bg-base-100 rounded-lg border border-base-300 hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+    <div className="bg-base-100 rounded-lg border border-base-300 hover:shadow-lg transition-shadow duration-200 overflow-hidden h-full flex flex-col">
       {/* Article Image */}
       {article.urlToImage && (
-        <div className="relative h-48 overflow-hidden">
+        <div className="relative h-40 sm:h-48 overflow-hidden flex-shrink-0">
           <img 
             src={article.urlToImage} 
             alt={article.title}
@@ -45,39 +45,39 @@ const NewsCard = ({ article, category }) => {
             }}
           />
           {/* Category Badge */}
-          <div className={`absolute top-3 left-3 ${getCategoryColor(category)} text-white px-2 py-1 rounded-full text-xs font-medium capitalize`}>
+          <div className={`absolute top-2 sm:top-3 left-2 sm:left-3 ${getCategoryColor(category)} text-white px-2 py-1 rounded-full text-xs font-medium capitalize`}>
             {category}
           </div>
         </div>
       )}
       
       {/* Card Content */}
-      <div className="p-4">
+      <div className="p-3 sm:p-4 flex flex-col flex-grow">
         {/* Source and Time */}
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             {article.source?.name && (
-              <span className="text-sm font-medium text-primary">
+              <span className="text-sm font-medium text-primary truncate">
                 {article.source.name}
               </span>
             )}
           </div>
           {article.publishedAt && (
-            <div className="flex items-center gap-1 text-xs text-base-content opacity-60">
+            <div className="flex items-center gap-1 text-xs text-base-content opacity-60 flex-shrink-0">
               <Clock className="w-3 h-3" />
-              {formatTimeAgo(article.publishedAt)}
+              <span className="whitespace-nowrap">{formatTimeAgo(article.publishedAt)}</span>
             </div>
           )}
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-base-content mb-2 line-clamp-2 leading-tight">
+        <h3 className="font-semibold text-base-content mb-2 line-clamp-2 leading-tight text-sm sm:text-base">
           {article.title}
         </h3>
 
         {/* Description */}
         {article.description && (
-          <p className="text-sm text-base-content opacity-80 line-clamp-3 mb-3 leading-relaxed">
+          <p className="text-xs sm:text-sm text-base-content opacity-80 line-clamp-3 mb-3 leading-relaxed flex-grow">
             {article.description}
           </p>
         )}
@@ -86,10 +86,10 @@ const NewsCard = ({ article, category }) => {
         {article.url && (
           <button 
             onClick={handleReadMore}
-            className="btn btn-outline btn-sm w-full gap-2 hover:btn-primary"
+            className="btn btn-outline btn-xs sm:btn-sm w-full gap-1 sm:gap-2 hover:btn-primary mt-auto"
           >
-            <ExternalLink className="w-4 h-4" />
-            Read Full Article
+            <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="text-xs sm:text-sm">Read Full Article</span>
           </button>
         )}
       </div>
