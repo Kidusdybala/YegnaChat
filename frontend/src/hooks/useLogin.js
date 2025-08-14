@@ -16,7 +16,23 @@ const useLogin = () => {
     },
     onError: (error) => {
       console.error('Login error:', error);
-      toast.error(error.response?.data?.message || 'Failed to login');
+      const errorData = error.response?.data;
+      
+      // Handle email not verified error
+      if (errorData?.emailNotVerified) {
+        toast.error('Please verify your email before logging in');
+        // Extract email from the login attempt if available
+        const email = error.config?.data ? JSON.parse(error.config.data).email : '';
+        if (email) {
+          localStorage.setItem('pendingVerificationEmail', email);
+          navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+        } else {
+          navigate('/verify-email');
+        }
+        return;
+      }
+      
+      toast.error(errorData?.message || 'Failed to login');
     }
   });
   

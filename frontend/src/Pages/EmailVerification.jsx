@@ -101,9 +101,12 @@ const EmailVerification = () => {
 
   if (isVerified) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-base-200">
-        <div className="card w-full max-w-md bg-base-100 shadow-xl">
-          <div className="card-body text-center">
+      <div 
+        className="min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8 bg-base-200"
+        data-theme="nord"
+      >
+        <div className="border border-primary/25 flex flex-col w-full max-w-md mx-auto bg-base-100 rounded-xl shadow-lg overflow-hidden">
+          <div className="w-full p-4 sm:p-8 flex flex-col text-center">
             <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
             <h2 className="card-title justify-center text-success">Email Verified!</h2>
             <p className="text-base-content/70">
@@ -117,9 +120,12 @@ const EmailVerification = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-base-200">
-      <div className="card w-full max-w-md bg-base-100 shadow-xl">
-        <div className="card-body">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8 bg-base-200"
+      data-theme="nord"
+    >
+      <div className="border border-primary/25 flex flex-col w-full max-w-md mx-auto bg-base-100 rounded-xl shadow-lg overflow-hidden">
+        <div className="w-full p-4 sm:p-8 flex flex-col">
           {/* Header */}
           <div className="text-center mb-6">
             <div className="flex items-center justify-center gap-2 mb-4">

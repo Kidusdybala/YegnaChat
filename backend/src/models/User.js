@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 4,
-      maxlength: 15,
+      // Remove maxlength constraint for hashed passwords
     },
     bio: {
       type: String,
@@ -47,6 +47,14 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     passwordResetExpires: {
+      type: Date,
+      default: null,
+    },
+    passwordResetCode: {
+      type: String,
+      default: null,
+    },
+    passwordResetCodeExpires: {
       type: Date,
       default: null,
     },

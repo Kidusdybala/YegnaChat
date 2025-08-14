@@ -7,8 +7,7 @@ import {
   verifyEmail, 
   resendVerificationCode, 
   forgotPassword, 
-  resetPassword,
-  testEmail 
+  resetPassword 
 } from "../controllers/auth.controller.js";
 import { onboard } from "../controllers/auth.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
@@ -23,7 +22,7 @@ router.post("/verify-email", verifyEmail);
 router.post("/resend-verification", resendVerificationCode);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
-router.post("/test-email", testEmail); // Development only
+
 router.post("/editprofile", protectRoute ,onboard);
 router.post("/change-password", protectRoute, changePassword);
 router.get("/me", protectRoute, (req, res) => {

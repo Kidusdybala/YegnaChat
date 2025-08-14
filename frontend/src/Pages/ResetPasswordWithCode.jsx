@@ -3,12 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useMutation } from '@tanstack/react-query';
 import axiosInstance from '../lib/axios';
-import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle, Mail, Shield } from 'lucide-react';
 
-const ResetPassword = () => {
+const ResetPasswordWithCode = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
+    email: '',
+    code: '',
     password: '',
     confirmPassword: ''
   });
@@ -16,19 +18,15 @@ const ResetPassword = () => {
     password: false,
     confirm: false
   });
-  const [token, setToken] = useState('');
   const [isReset, setIsReset] = useState(false);
 
-  // Get token from URL params
+  // Get email from URL params if available
   useEffect(() => {
-    const tokenFromParams = searchParams.get('token');
-    if (!tokenFromParams) {
-      toast.error('Invalid reset link');
-      navigate('/login');
-      return;
+    const emailFromParams = searchParams.get('email');
+    if (emailFromParams) {
+      setFormData(prev => ({ ...prev, email: emailFromParams }));
     }
-    setToken(tokenFromParams);
-  }, [searchParams, navigate]);
+  }, [searchParams]);
 
   // Validate password
   const validatePassword = (password) => {
@@ -45,8 +43,8 @@ const ResetPassword = () => {
 
   // Reset password mutation
   const resetPasswordMutation = useMutation({
-    mutationFn: async ({ token, password }) => {
-      const response = await axiosInstance.post('/auth/reset-password', { token, password });
+    mutationFn: async ({ email, code, password }) => {
+      const response = await axiosInstance.post('/auth/reset-password', { email, code, password });
       return response.data;
     },
     onSuccess: () => {
@@ -65,6 +63,21 @@ const ResetPassword = () => {
     e.preventDefault();
 
     // Validation
+    if (!formData.email.trim()) {
+      toast.error('Email is required');
+      return;
+    }
+
+    if (!formData.code.trim()) {
+      toast.error('Verification code is required');
+      return;
+    }
+
+    if (formData.code.length !== 6) {
+      toast.error('Verification code must be 6 digits');
+      return;
+    }
+
     if (!formData.password.trim()) {
       toast.error('Password is required');
       return;
@@ -80,15 +93,29 @@ const ResetPassword = () => {
       return;
     }
 
-    resetPasswordMutation.mutate({ token, password: formData.password });
+    resetPasswordMutation.mutate({ 
+      email: formData.email, 
+      code: formData.code, 
+      password: formData.password 
+    });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // For code input, only allow numbers and limit to 6 digits
+    if (name === 'code') {
+      const numericValue = value.replace(/\D/g, '').slice(0, 6);
+      setFormData(prev => ({
+        ...prev,
+        [name]: numericValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   if (isReset) {
@@ -126,15 +153,60 @@ const ResetPassword = () => {
                 YegnaChat
               </span>
             </div>
-            <Lock className="w-16 h-16 text-primary mx-auto mb-4" />
+            <Shield className="w-16 h-16 text-primary mx-auto mb-4" />
             <h2 className="card-title justify-center">Reset Password</h2>
             <p className="text-sm text-base-content/70">
-              Enter your new password below
+              Enter the verification code sent to your email and create a new password
             </p>
           </div>
 
           {/* Reset Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Email Address</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  className="input input-bordered w-full pl-12"
+                  value={formData.email}
+                  onChange={handleChange}
+                  style={{ fontSize: '16px' }} // Prevent iOS zoom
+                  required
+                />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/50" />
+              </div>
+            </div>
+
+            {/* Verification Code */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Verification Code</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  name="code"
+                  placeholder="Enter 6-digit code"
+                  className="input input-bordered w-full text-center text-2xl font-mono tracking-widest"
+                  value={formData.code}
+                  onChange={handleChange}
+                  maxLength={6}
+                  style={{ fontSize: '24px' }} // Prevent iOS zoom
+                  required
+                />
+              </div>
+              <div className="label">
+                <span className="label-text-alt text-base-content/60">
+                  Check your email for the 6-digit verification code
+                </span>
+              </div>
+            </div>
+
             {/* New Password */}
             <div className="form-control">
               <label className="label">
@@ -231,10 +303,11 @@ const ResetPassword = () => {
             <div className="alert alert-info">
               <Lock className="w-5 h-5" />
               <div className="text-sm">
-                <div className="font-medium mb-1">Password Requirements:</div>
+                <div className="font-medium mb-1">Requirements:</div>
                 <ul className="text-xs space-y-1 opacity-80">
-                  <li>• Must be between 4 and 15 characters long</li>
-                  <li>• Use a unique password you don't use elsewhere</li>
+                  <li>• Enter the 6-digit code from your email</li>
+                  <li>• Password must be between 4 and 15 characters</li>
+                  <li>• Code expires in 10 minutes</li>
                 </ul>
               </div>
             </div>
@@ -244,6 +317,9 @@ const ResetPassword = () => {
               className="btn btn-primary w-full"
               disabled={
                 resetPasswordMutation.isPending ||
+                !formData.email ||
+                !formData.code ||
+                formData.code.length !== 6 ||
                 !formData.password ||
                 !formData.confirmPassword ||
                 formData.password !== formData.confirmPassword ||
@@ -273,10 +349,20 @@ const ResetPassword = () => {
               Back to Login
             </button>
           </div>
+
+          {/* Resend Code */}
+          <div className="text-center mt-2">
+            <button
+              onClick={() => navigate('/forgot-password')}
+              className="btn btn-ghost btn-sm text-primary"
+            >
+              Didn't receive code? Send again
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default ResetPassword;
+export default ResetPasswordWithCode;

@@ -5,6 +5,7 @@ import { upsertStreamUser } from "../lib/stream.js";
 import { 
   sendVerificationEmail, 
   sendPasswordResetEmail, 
+  sendPasswordResetCodeEmail,
   generateVerificationCode, 
   generateResetToken 
 } from "../services/emailService.js";
@@ -386,16 +387,16 @@ export async function forgotPassword(req, res) {
       });
     }
 
-    // Generate reset token
-    const resetToken = generateResetToken();
-    user.passwordResetToken = resetToken;
-    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    // Generate reset code
+    const resetCode = generateVerificationCode();
+    user.passwordResetCode = resetCode;
+    user.passwordResetCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await user.save();
 
-    // Send password reset email
+    // Send password reset code email
     try {
-      await sendPasswordResetEmail(email, resetToken, user.fullName);
+      await sendPasswordResetCodeEmail(email, resetCode, user.fullName);
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
       return res.status(500).json({ 
@@ -405,7 +406,7 @@ export async function forgotPassword(req, res) {
     }
 
     return res.status(200).json({
-      message: "If an account with that email exists, a password reset link has been sent."
+      message: "If an account with that email exists, a password reset code has been sent."
     });
 
   } catch (error) {
@@ -417,12 +418,12 @@ export async function forgotPassword(req, res) {
 // Reset Password Handler
 export async function resetPassword(req, res) {
   try {
-    const { token, password } = req.body;
+    const { email, code, password } = req.body;
 
     // Validate required fields
-    if (!token || !password) {
+    if (!email || !code || !password) {
       return res.status(400).json({
-        message: "Token and new password are required"
+        message: "Email, verification code, and new password are required"
       });
     }
 
@@ -433,22 +434,23 @@ export async function resetPassword(req, res) {
       });
     }
 
-    // Find user with valid reset token
+    // Find user with valid reset code
     const user = await User.findOne({
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: new Date() }
+      email,
+      passwordResetCode: code,
+      passwordResetCodeExpires: { $gt: new Date() }
     });
 
     if (!user) {
       return res.status(400).json({
-        message: "Invalid or expired reset token"
+        message: "Invalid or expired reset code"
       });
     }
 
     // Update password
     user.password = password;
-    user.passwordResetToken = null;
-    user.passwordResetExpires = null;
+    user.passwordResetCode = null;
+    user.passwordResetCodeExpires = null;
 
     await user.save();
 
@@ -464,28 +466,3 @@ export async function resetPassword(req, res) {
   }
 }
 
-// Test Email Configuration (for development only)
-export async function testEmail(req, res) {
-  try {
-    const { email } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({ message: "Email is required for testing" });
-    }
-
-    // Test sending a simple email
-    const testCode = "123456";
-    await sendVerificationEmail(email, testCode, "Test User");
-    
-    return res.status(200).json({
-      message: "Test email sent successfully! Check your inbox."
-    });
-
-  } catch (error) {
-    console.error("Test email error:", error);
-    return res.status(500).json({ 
-      message: "Email test failed", 
-      error: error.message 
-    });
-  }
-}

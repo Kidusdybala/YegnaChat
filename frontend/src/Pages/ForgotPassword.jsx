@@ -40,21 +40,31 @@ const ForgotPassword = () => {
 
   if (isEmailSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-base-200">
-        <div className="card w-full max-w-md bg-base-100 shadow-xl">
-          <div className="card-body text-center">
+      <div 
+        className="min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8 bg-base-200"
+        data-theme="nord"
+      >
+        <div className="border border-primary/25 flex flex-col w-full max-w-md mx-auto bg-base-100 rounded-xl shadow-lg overflow-hidden">
+          <div className="w-full p-4 sm:p-8 flex flex-col text-center">
             <Mail className="w-16 h-16 text-success mx-auto mb-4" />
-            <h2 className="card-title justify-center text-success">Email Sent!</h2>
+            <h2 className="card-title justify-center text-success">Code Sent!</h2>
             <p className="text-base-content/70 mb-4">
-              We've sent a password reset link to:
+              We've sent a 6-digit verification code to:
             </p>
             <p className="font-medium text-primary mb-6">{email}</p>
             <p className="text-sm text-base-content/60 mb-6">
-              Check your email and click the link to reset your password. 
-              The link will expire in 1 hour.
+              Check your email for the verification code and use it to reset your password. 
+              The code will expire in 10 minutes.
             </p>
             
             <div className="space-y-3">
+              <Link 
+                to={`/reset-password?email=${encodeURIComponent(email)}`} 
+                className="btn btn-primary w-full"
+              >
+                Enter Verification Code
+              </Link>
+              
               <button
                 onClick={() => {
                   setIsEmailSent(false);
@@ -62,10 +72,10 @@ const ForgotPassword = () => {
                 }}
                 className="btn btn-ghost w-full"
               >
-                Send Another Email
+                Send Another Code
               </button>
               
-              <Link to="/login" className="btn btn-primary w-full">
+              <Link to="/login" className="btn btn-ghost w-full">
                 Back to Login
               </Link>
             </div>
@@ -76,9 +86,12 @@ const ForgotPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-base-200">
-      <div className="card w-full max-w-md bg-base-100 shadow-xl">
-        <div className="card-body">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8 bg-base-200"
+      data-theme="nord"
+    >
+      <div className="border border-primary/25 flex flex-col w-full max-w-md mx-auto bg-base-100 rounded-xl shadow-lg overflow-hidden">
+        <div className="w-full p-4 sm:p-8 flex flex-col">
           {/* Header */}
           <div className="text-center mb-6">
             <div className="flex items-center justify-center gap-2 mb-4">

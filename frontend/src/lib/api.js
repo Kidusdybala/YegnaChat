@@ -25,6 +25,26 @@ export const authAPI = {
   logout: async () => {
     const response = await axiosInstance.post('/auth/logout');
     return response.data;
+  },
+
+  verifyEmail: async (email, code) => {
+    const response = await axiosInstance.post('/auth/verify-email', { email, code });
+    return response.data;
+  },
+
+  resendVerificationCode: async (email) => {
+    const response = await axiosInstance.post('/auth/resend-verification', { email });
+    return response.data;
+  },
+
+  forgotPassword: async (email) => {
+    const response = await axiosInstance.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  resetPassword: async (email, code, password) => {
+    const response = await axiosInstance.post('/auth/reset-password', { email, code, password });
+    return response.data;
   }
 };
 

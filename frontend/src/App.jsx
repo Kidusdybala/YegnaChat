@@ -10,7 +10,7 @@ import FriendsPage from "./Pages/FriendsPage";
 import ChangePassword from "./Pages/ChangePassword";
 import EmailVerification from "./Pages/EmailVerification";
 import ForgotPassword from "./Pages/ForgotPassword";
-import ResetPassword from "./Pages/ResetPassword";
+import ResetPasswordWithCode from "./Pages/ResetPasswordWithCode";
 import { Toaster } from "react-hot-toast";
 import PageLoader from "./components/PageLoader";
 import useAuthUser from "./hooks/useAuthUser";
@@ -44,7 +44,7 @@ const App = () => {
         <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
         <Route path="/verify-email" element={!authUser ? <EmailVerification /> : <Navigate to="/" />} />
         <Route path="/forgot-password" element={!authUser ? <ForgotPassword /> : <Navigate to="/" />} />
-        <Route path="/reset-password" element={!authUser ? <ResetPassword /> : <Navigate to="/" />} />
+        <Route path="/reset-password" element={!authUser ? <ResetPasswordWithCode /> : <Navigate to="/" />} />
 
         <Route 
           path="/call" 
