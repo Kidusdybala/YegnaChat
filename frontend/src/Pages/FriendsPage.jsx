@@ -14,7 +14,8 @@ import {
   UserCheck,
   UserX,
   MoreHorizontal,
-  Search
+  Search,
+  Phone
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { chatAPI } from '../lib/api';
@@ -357,25 +358,26 @@ const FriendsPage = () => {
                             {isFriend ? (
                               <Link 
                                 to={`/chat/${user._id}`} 
-                                className="btn btn-primary btn-sm w-full"
+                                className="btn btn-primary btn-sm w-full min-h-8 h-8 flex items-center justify-center"
+                                title="Send message"
                               >
-                                <MessageCircle className="w-4 h-4 mr-1" />
-                                Message
+                                <MessageCircle className="w-4 h-4" />
                               </Link>
                             ) : requestSent ? (
                               <button 
-                                className="btn btn-outline btn-sm w-full"
+                                className="btn btn-outline btn-sm w-full min-h-8 h-8 flex items-center justify-center"
                                 onClick={() => setShowCancelConfirm(user._id)}
+                                title="Request sent - click to cancel"
                               >
-                                Request Sent
+                                <UserCheck className="w-4 h-4" />
                               </button>
                             ) : (
                               <button 
-                                className="btn btn-primary btn-sm w-full"
+                                className="btn btn-primary btn-sm w-full min-h-8 h-8 flex items-center justify-center"
                                 onClick={() => handleSendRequest(user._id)}
+                                title="Add friend"
                               >
-                                <UserPlusIcon className="w-4 h-4 mr-1" />
-                                Add Friend
+                                <UserPlusIcon className="w-4 h-4" />
                               </button>
                             )}
                           </div>
@@ -440,17 +442,17 @@ const FriendsPage = () => {
                             </p>
                             <div className="flex space-x-2">
                               <button 
-                                className="btn btn-primary btn-sm flex-1"
+                                className="btn btn-primary btn-sm flex-1 min-h-8 h-8 text-xs flex items-center justify-center"
                                 onClick={() => handleAcceptRequest(request._id)}
                               >
-                                <UserCheck className="w-4 h-4 mr-1" />
+                                <UserCheck className="w-3 h-3 mr-1" />
                                 Accept
                               </button>
                               <button 
-                                className="btn btn-outline btn-sm flex-1"
+                                className="btn btn-outline btn-sm flex-1 min-h-8 h-8 text-xs flex items-center justify-center"
                                 onClick={() => handleDeclineRequest(request._id)}
                               >
-                                <UserX className="w-4 h-4 mr-1" />
+                                <UserX className="w-3 h-3 mr-1" />
                                 Delete
                               </button>
                             </div>
@@ -508,13 +510,22 @@ const FriendsPage = () => {
                             <h3 className="font-medium text-base-content truncate mb-2">
                               {friend.fullName}
                             </h3>
-                            <Link 
-                              to={`/chat/${friend._id}`} 
-                              className="btn btn-primary btn-sm w-full"
-                            >
-                              <MessageCircle className="w-4 h-4 mr-1" />
-                              Message
-                            </Link>
+                            <div className="flex gap-2 w-full">
+                              <Link 
+                                to={`/chat/${friend._id}`} 
+                                className="btn btn-primary btn-sm flex-1 min-h-8 h-8 flex items-center justify-center"
+                                title="Send message"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                              </Link>
+                              <button 
+                                onClick={() => navigate(`/call?userId=${friend._id}`)}
+                                className="btn btn-outline btn-sm flex-1 min-h-8 h-8 flex items-center justify-center"
+                                title="Start call"
+                              >
+                                <Phone className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -553,18 +564,19 @@ const FriendsPage = () => {
                                     </h3>
                                     {requestSent ? (
                                       <button 
-                                        className="btn btn-outline btn-sm w-full"
+                                        className="btn btn-outline btn-sm w-full min-h-8 h-8 flex items-center justify-center"
                                         onClick={() => setShowCancelConfirm(user._id)}
+                                        title="Request sent - click to cancel"
                                       >
-                                        Request Sent
+                                        <UserCheck className="w-4 h-4" />
                                       </button>
                                     ) : (
                                       <button 
-                                        className="btn btn-primary btn-sm w-full"
+                                        className="btn btn-primary btn-sm w-full min-h-8 h-8 flex items-center justify-center"
                                         onClick={() => handleSendRequest(user._id)}
+                                        title="Add friend"
                                       >
-                                        <UserPlusIcon className="w-3 h-3 mr-1" />
-                                        Add Friend
+                                        <UserPlusIcon className="w-4 h-4" />
                                       </button>
                                     )}
                                   </div>
@@ -666,18 +678,19 @@ const FriendsPage = () => {
                               </div>
                             ) : requestSent ? (
                               <button 
-                                className="btn btn-outline btn-sm w-full"
+                                className="btn btn-outline btn-sm w-full min-h-8 h-8 flex items-center justify-center"
                                 onClick={() => setShowCancelConfirm(user._id)}
+                                title="Request sent - click to cancel"
                               >
-                                Request Sent
+                                <UserCheck className="w-4 h-4" />
                               </button>
                             ) : (
                               <button 
-                                className="btn btn-primary btn-sm w-full"
+                                className="btn btn-primary btn-sm w-full min-h-8 h-8 flex items-center justify-center"
                                 onClick={() => handleSendRequest(user._id)}
+                                title="Add friend"
                               >
-                                <UserPlusIcon className="w-4 h-4 mr-1" />
-                                Add Friend
+                                <UserPlusIcon className="w-4 h-4" />
                               </button>
                             )}
                           </div>

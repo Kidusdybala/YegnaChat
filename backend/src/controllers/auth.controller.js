@@ -51,7 +51,6 @@ export async function Login(req, res) {
     res.cookie("jwt", token, { httpOnly: true, sameSite:"strict", secure: process.env.NODE_ENV === "production", maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days in ms
     res.status(201).json({ success:true, user:user});
   } catch (error) {
-    console.log("error in signup", error);
     res.status(500).json({ message: "internal server", error: error.message });
   }
 }
@@ -137,7 +136,7 @@ export async function Signup(req, res) {
     });
     
     await user.save();
-    console.log("User created, pending email verification");
+
 
     // Send verification email
     try {
@@ -178,17 +177,14 @@ export async function onboard(req, res) {
     // Update the user
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      {
-        ...req.body,
-        isOnboarded: true,
-      },
+      req.body,
       { new: true }
     );
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
-    console.log(` User ${updatedUser.fullName} updated successfully: `);
+
 
     return res.status(200).json({
       message: "User updated successfully",
@@ -244,7 +240,7 @@ export async function changePassword(req, res) {
     user.password = newPassword;
     await user.save();
 
-    console.log(`Password changed successfully for user: ${user.fullName}`);
+
 
     return res.status(200).json({
       message: "Password changed successfully"
@@ -293,14 +289,14 @@ export async function verifyEmail(req, res) {
         name: user.fullName,
         image: user.profilePic || "",
       });
-      console.log(`User ${user.fullName} upserted to Stream successfully`);
+
     } catch (error) {
       console.error(`Error upserting user ${user._id}:`, error);
     }
 
     await user.save();
 
-    console.log(`Email verified successfully for user: ${user.fullName}`);
+
 
     return res.status(200).json({
       message: "Email verified successfully! You can now log in."
@@ -454,7 +450,7 @@ export async function resetPassword(req, res) {
 
     await user.save();
 
-    console.log(`Password reset successfully for user: ${user.fullName}`);
+
 
     return res.status(200).json({
       message: "Password reset successfully! You can now log in with your new password."

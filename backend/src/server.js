@@ -80,13 +80,12 @@ app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
   
   // Add user to online users when they connect
   socket.on('addUser', (userId) => {
     onlineUsers.set(userId, socket.id);
     io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
-    console.log('User added to online users:', userId);
+
   });
   
   // Handle sending messages
@@ -106,7 +105,7 @@ io.on('connection', (socket) => {
           content,
           timestamp: new Date().toISOString()
         });
-        console.log(`Message sent to ${receiverId}`);
+
       }
     } catch (error) {
       console.error('Error in sendMessage socket handler:', error);
@@ -130,7 +129,6 @@ io.on('connection', (socket) => {
   
   // Handle disconnection
   socket.on('disconnect', () => {
-    console.log('A user disconnected');
     // Remove user from online users
     for (const [userId, socketId] of onlineUsers.entries()) {
       if (socketId === socket.id) {

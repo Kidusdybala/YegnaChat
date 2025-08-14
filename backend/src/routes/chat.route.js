@@ -66,7 +66,6 @@ router.get("/all-chats", protectRoute, async (req, res) => {
     
     res.status(200).json({ chats });
   } catch (error) {
-    console.log("Error in test route:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });

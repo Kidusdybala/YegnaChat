@@ -82,7 +82,7 @@ export const sendVerificationEmail = async (email, code, fullName) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`Verification email sent to ${email}`);
+
     return true;
   } catch (error) {
     console.error('Error sending verification email:', error);
@@ -155,7 +155,7 @@ export const sendPasswordResetEmail = async (email, resetToken, fullName) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`Password reset email sent to ${email}`);
+
     return true;
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -230,7 +230,7 @@ export const sendPasswordResetCodeEmail = async (email, resetCode, fullName) => 
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`Password reset code email sent to ${email}`);
+
     return true;
   } catch (error) {
     console.error('Error sending password reset code email:', error);

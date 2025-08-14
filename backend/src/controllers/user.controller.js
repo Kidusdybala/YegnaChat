@@ -93,7 +93,7 @@ export async function sendFriendRequest(req, res) {
           senderId: myId,
           senderName: sender.fullName
         });
-        console.log(`Friend request notification sent to ${receiverId}`);
+
       }
     }
 
@@ -143,13 +143,12 @@ export async function acceptFriendRequest(req, res) {
           accepterId: friendRequest.receiver,
           accepterName: accepter.fullName
         });
-        console.log(`Friend acceptance notification sent to ${friendRequest.sender}`);
+
       }
     }
 
     res.status(200).json({ message: "Friend request accepted" });
   } catch (error) {
-    console.log("Error in acceptFriendRequest controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -168,7 +167,6 @@ export async function getFriendRequests(req, res) {
 
     res.status(200).json({ incomingReqs, acceptedReqs });
   } catch (error) {
-    console.log("Error in getPendingFriendRequests controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -182,7 +180,6 @@ export async function getOutgoingFriendReqs(req, res) {
 
     res.status(200).json(outgoingRequests);
   } catch (error) {
-    console.log("Error in getOutgoingFriendReqs controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -222,7 +219,6 @@ export const getUserById = async (req, res) => {
 
     res.status(200).json({ user });
   } catch (error) {
-    console.log("Error in getUserById controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

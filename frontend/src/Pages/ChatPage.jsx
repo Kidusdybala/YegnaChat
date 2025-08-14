@@ -1,12 +1,12 @@
 // frontend/src/Pages/ChatPage.jsx
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import useAuthUser from "../hooks/useAuthUser";
 import { useSocketContext } from "../context/SocketContext";
 import { chatAPI, userAPI } from "../lib/api";
 import { Send, Phone, Video, Image, MessageCircle } from "lucide-react";
 import toast from "react-hot-toast";
-import CallButton from "../components/CallButton";
+
 import VideoCall from "../components/VideoCall";
 import ChatList from "../components/ChatList";
 import { getProfilePictureUrl, getUserInitials } from "../utils/imageUtils";
@@ -15,6 +15,7 @@ const ChatPage = () => {
   const { chatId: targetUserId } = useParams();
   const { authUser, refetchUser } = useAuthUser();
   const { socket } = useSocketContext();
+  const navigate = useNavigate();
   
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -286,12 +287,17 @@ const ChatPage = () => {
           </div>
     
           <div className="flex space-x-1 sm:space-x-2">
-            <button className="p-1.5 sm:p-2 hover:bg-primary-focus rounded-full transition-colors text-primary-content">
+            <button 
+              className="p-1.5 sm:p-2 hover:bg-primary-focus rounded-full transition-colors text-primary-content"
+              onClick={() => navigate(`/call?userId=${targetUserId}`)}
+              title="Start call"
+            >
               <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button 
               className="p-1.5 sm:p-2 hover:bg-primary-focus rounded-full transition-colors text-primary-content"
               onClick={handleVideoCall}
+              title="Start video call"
             >
               <Video className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>

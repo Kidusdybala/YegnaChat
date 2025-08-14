@@ -20,19 +20,15 @@ if (!fs.existsSync(uploadsDir)) {
 
 export async function getStreamToken(req, res) {
   try {
-    console.log(` Generating Stream token for user: ${req.user.id}`);
     const token = generateStreamToken(req.user.id);
     if (!token) {
-      console.log(" Failed to generate Stream token - returning fallback");
       return res.status(500).json({
         message: "Stream Chat not available",
         fallback: true
       });
     }
-    console.log(` Stream token generated successfully for user: ${req.user.id}`);
     res.status(200).json({ token });
   } catch (error) {
-    console.log(" Error in getStreamToken controller", error.message);
     res.status(500).json({
       message: "Stream Chat not available",
       fallback: true
@@ -46,7 +42,7 @@ export async function createOrGetStreamChat(req, res) {
     const { userId } = req.body;
     const currentUserId = req.user.id;
 
-    console.log(` Creating chat between ${currentUserId} and ${userId}`);
+
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
@@ -54,11 +50,9 @@ export async function createOrGetStreamChat(req, res) {
 
     // Check if users are friends
     const currentUser = await User.findById(currentUserId);
-    console.log(` Current user friends:`, currentUser.friends);
-    console.log(` Checking if ${userId} is in friends list:`, currentUser.friends.includes(userId));
+
 
     if (!currentUser.friends.includes(userId)) {
-      console.log(` Users are not friends. Current user: ${currentUserId}, Target user: ${userId}`);
       return res.status(403).json({ message: "You can only chat with friends. Please send and accept a friend request first." });
     }
 
@@ -94,7 +88,6 @@ export async function createOrGetStreamChat(req, res) {
       }
     });
   } catch (error) {
-    console.log("Error in createOrGetStreamChat controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -111,7 +104,6 @@ export async function uploadMedia(req, res) {
     const fileUrl = `/uploads/${file.filename}`;
     res.status(200).json({ fileUrl });
   } catch (error) {
-    console.log("Error in uploadMedia controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -122,7 +114,6 @@ export async function createOrGetChat(req, res) {
     const { userId } = req.body;
     const currentUserId = req.user.id;
 
-    console.log(`💬 Creating simple chat between ${currentUserId} and ${userId}`);
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
@@ -131,7 +122,6 @@ export async function createOrGetChat(req, res) {
     // Check if users are friends
     const currentUser = await User.findById(currentUserId);
     if (!currentUser.friends.includes(userId)) {
-      console.log(` Users are not friends. Current user: ${currentUserId}, Target user: ${userId}`);
       return res.status(403).json({ message: "You can only chat with friends. Please send and accept a friend request first." });
     }
 
@@ -148,14 +138,12 @@ export async function createOrGetChat(req, res) {
       
       // If there are duplicates, clean them up
       if (existingChats.length > 1) {
-        console.log(`Found ${existingChats.length} duplicate chats between users ${currentUserId} and ${userId}, cleaning up...`);
         
         // Keep the first (most recent) chat and delete the rest
         const chatsToDelete = existingChats.slice(1).map(c => c._id);
         
         // Delete the duplicate chats
         await Chat.deleteMany({ _id: { $in: chatsToDelete } });
-        console.log(`Deleted ${chatsToDelete.length} duplicate chats`);
       }
     } else {
       // Create a new chat if none exists
@@ -167,10 +155,8 @@ export async function createOrGetChat(req, res) {
     // Populate the chat with participant details
     chat = await Chat.findById(chat._id).populate('participants', 'fullName profilePic');
 
-    console.log(` Chat created/found: ${chat._id}`);
     res.status(200).json({ chat });
   } catch (error) {
-    console.log("Error in createOrGetChat controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -205,14 +191,12 @@ export async function getChatMessages(req, res) {
         $set: { status: "read" }
       }
     ).then(result => {
-      console.log(`Marked ${result.modifiedCount} messages as read in chat ${chatId}`);
     }).catch(err => {
       console.error("Error marking messages as read:", err);
     });
 
     res.status(200).json({ messages });
   } catch (error) {
-    console.log("Error in getChatMessages controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -248,7 +232,6 @@ export async function sendMessage(req, res) {
 
     res.status(201).json({ message: populatedMessage });
   } catch (error) {
-    console.log("Error in sendMessage controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -256,7 +239,6 @@ export async function sendMessage(req, res) {
 export async function getUserChats(req, res) {
   try {
     const currentUserId = req.user.id;
-    console.log(`Getting chats for user: ${currentUserId}`);
 
     // Get all chats for the current user
     let chats = await Chat.find({
@@ -272,7 +254,6 @@ export async function getUserChats(req, res) {
     })
     .sort({ updatedAt: -1 });
 
-    console.log(`Found ${chats.length} chats for user: ${currentUserId}`);
     
     // Check for duplicate chats and clean them up automatically
     const uniqueParticipantSets = new Map();
@@ -299,15 +280,12 @@ export async function getUserChats(req, res) {
     
     // If we found duplicates, delete them from the database
     if (chatsToDelete.length > 0) {
-      console.log(`Found ${chatsToDelete.length} duplicate chats, cleaning up...`);
       await Chat.deleteMany({ _id: { $in: chatsToDelete } });
-      console.log(`Deleted ${chatsToDelete.length} duplicate chats`);
     }
     
     // Return only the unique chats
     res.status(200).json({ chats: chatsToKeep });
   } catch (error) {
-    console.log("Error in getUserChats controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -331,14 +309,12 @@ export async function getMessagesBetweenUsers(req, res) {
     
     // If there are duplicates, clean them up
     if (chats.length > 1) {
-      console.log(`Found ${chats.length} duplicate chats between users ${currentUserId} and ${targetUserId}, cleaning up...`);
       
       // Keep the first (most recent) chat and delete the rest
       const chatsToDelete = chats.slice(1).map(c => c._id);
       
       // Delete the duplicate chats
       await Chat.deleteMany({ _id: { $in: chatsToDelete } });
-      console.log(`Deleted ${chatsToDelete.length} duplicate chats`);
     }
 
     // Get messages for this chat
@@ -359,14 +335,12 @@ export async function getMessagesBetweenUsers(req, res) {
         $set: { status: "read" }
       }
     ).then(result => {
-      console.log(`Marked ${result.modifiedCount} messages as read in chat between ${currentUserId} and ${targetUserId}`);
     }).catch(err => {
       console.error("Error marking messages as read:", err);
     });
 
     res.status(200).json({ messages });
   } catch (error) {
-    console.log("Error in getMessagesBetweenUsers controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -390,11 +364,9 @@ export async function getUnreadMessagesCount(req, res) {
       readBy: { $ne: currentUserId } // Current user hasn't read the message
     });
     
-    console.log(`Found ${unreadMessages} unread messages for user ${currentUserId}`);
     
     res.status(200).json({ count: unreadMessages });
   } catch (error) {
-    console.log("Error in getUnreadMessagesCount controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -424,14 +396,12 @@ export async function markMessagesAsRead(req, res) {
       }
     );
     
-    console.log(`Marked ${updateResult.modifiedCount} messages as read in chat ${chatId}`);
     
     res.status(200).json({ 
       message: `Marked ${updateResult.modifiedCount} messages as read`,
       modifiedCount: updateResult.modifiedCount
     });
   } catch (error) {
-    console.log("Error in markMessagesAsRead controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }

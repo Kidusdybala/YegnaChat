@@ -49,8 +49,6 @@ export const SocketContextProvider = ({ children }) => {
 
       // Listen for new messages
       newSocket.on("getMessage", (data) => {
-        console.log("New message received via socket:", data);
-        
         // Refresh unread counts
         refreshUnreadCounts();
         
@@ -62,8 +60,6 @@ export const SocketContextProvider = ({ children }) => {
       
       // Listen for friend request notifications
       newSocket.on("getFriendRequest", (data) => {
-        console.log("New friend request received:", data);
-        
         // Refresh notifications
         refreshUnreadCounts();
         
@@ -73,8 +69,6 @@ export const SocketContextProvider = ({ children }) => {
       
       // Listen for accepted friend requests
       newSocket.on("getFriendAccepted", (data) => {
-        console.log("Friend request accepted:", data);
-        
         // Refresh notifications
         refreshUnreadCounts();
         
@@ -88,7 +82,7 @@ export const SocketContextProvider = ({ children }) => {
       });
 
       newSocket.on("connect", () => {
-        console.log("✅ Socket connected successfully");
+        // Socket connected successfully
       });
 
       return () => {

@@ -26,10 +26,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    isOnboarded: {
-      type: Boolean,
-      default: false,
-    },
     isEmailVerified: {
       type: Boolean,
       default: false,
