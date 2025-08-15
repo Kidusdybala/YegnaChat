@@ -37,7 +37,7 @@ const onlineUsers = new Map();
 const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production' 
-      ? [process.env.FRONTEND_URL, "https://yegnachat-frontend.onrender.com"] 
+      ? true // Same origin in production
       : ["http://localhost:5173", "http://yegnachat.local:5173"],
     credentials: true
   }
@@ -50,7 +50,7 @@ app.set('onlineUsers', onlineUsers);
 // THEN add middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL, "https://yegnachat-frontend.onrender.com"] 
+    ? true // Same origin in production
     : ["http://localhost:5173", "http://yegnachat.local:5173"],
   credentials: true
 }));
@@ -82,6 +82,19 @@ app.use(compression());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
+
+// Serve static files from frontend build in production
+if (process.env.NODE_ENV === 'production') {
+  const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+  app.use(express.static(frontendDistPath));
+  
+  // Handle React Router - send all non-API requests to index.html
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(frontendDistPath, 'index.html'));
+    }
+  });
+}
 
 io.on('connection', (socket) => {
   
