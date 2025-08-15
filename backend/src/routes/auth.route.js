@@ -28,4 +28,14 @@ router.post("/change-password", protectRoute, changePassword);
 router.get("/me", protectRoute, (req, res) => {
   res.status(200).json({ success: true, user:req.user});
 });
+
+// Health check endpoint for Render
+router.get("/check", (req, res) => {
+  res.status(200).json({ 
+    success: true, 
+    message: "YegnaChat Backend is running!",
+    timestamp: new Date().toISOString()
+  });
+});
+
 export default router;

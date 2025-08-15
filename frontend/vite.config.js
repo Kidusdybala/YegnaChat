@@ -31,4 +31,8 @@ export default defineConfig({
       external: ['simple-peer'],
     },
   },
+  server: {
+    host: true,
+    port: 5173,
+  },
 })

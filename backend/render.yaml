@@ -1,0 +1,45 @@
+services:
+  # Backend API Service
+  - type: web
+    name: yegnachat-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/auth/check
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: STREAM_API_KEY
+        sync: false
+      - key: STREAM_API_SECRET
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: FRONTEND_URL
+        value: https://yegnachat-frontend.onrender.com
+
+  # Frontend Static Site Service
+  - type: web
+    name: yegnachat-frontend
+    env: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_STREAM_API_KEY
+        sync: false
+      - key: VITE_NEWS_API_KEY
+        sync: false
+      - key: VITE_API_URL
+        value: https://yegnachat-backend.onrender.com/api
