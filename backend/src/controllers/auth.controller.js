@@ -12,7 +12,7 @@ import {
 
 const router = express.Router();
 export function Logout(req, res) {
-  res.clearCookie("jwt"); // Clear JWT cookie
+  res.clearCookie("jwt"); 
   res.status(200).json({ message: "Logged out successfully" });
 }
 
@@ -43,20 +43,22 @@ export async function Login(req, res) {
     }
     const token = jwt.sign(
       { id: user._id, email: user.email },
-      process.env.JWT_SECRET, // Ensure this is in .env
+      process.env.JWT_SECRET, 
       { expiresIn: "7d" }
     );
 
-    // Set token in cookie (optional, or send in response)
-    res.cookie("jwt", token, { httpOnly: true, sameSite:"strict", secure: process.env.NODE_ENV === "production", maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days in ms
+    // Set token in cookie 
+    res.cookie("jwt", token, { httpOnly: true, 
+      sameSite:"strict", 
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days in ms
     res.status(201).json({ success:true, user:user});
   } catch (error) {
     res.status(500).json({ message: "internal server", error: error.message });
   }
 }
 export async function Signup(req, res) {
-  // Remove nativeLanguage and learningLanguage from destructuring
-  const { email, password, fullName, bio } = req.body;
+  const { email, password, fullName } = req.body;
 
   try {
     // Validate required fields
@@ -128,7 +130,6 @@ export async function Signup(req, res) {
       email,
       password,
       fullName,
-      bio: bio || "",
       profilePic: "", // Empty profile picture by default
       emailVerificationCode: verificationCode,
       emailVerificationExpires: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
@@ -156,21 +157,19 @@ export async function Signup(req, res) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 }
-export async function onboard(req, res) {
+export async function editProfile(req, res) {
   try {
     const userId = req.user.id;
     const {
       fullName,
-      bio,
     } = req.body;
 
     // Update validation to not require language fields
-    if (!fullName || !bio) {
+    if (!fullName) {
       return res.status(400).json({
         message: "All fields are required",
         missingFields: [
           !fullName && "fullName",
-          !bio && "bio",
         ].filter(Boolean),
       });
     }
@@ -191,7 +190,7 @@ export async function onboard(req, res) {
       user: updatedUser,
     });
   } catch (error) {
-    console.error("editprofile error:", error);
+    console.error("edit profile error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 }
