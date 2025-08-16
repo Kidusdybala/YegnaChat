@@ -44,8 +44,16 @@ export const SocketContextProvider = ({ children }) => {
 
       setSocket(newSocket);
 
-      console.log("🔌 Adding user to socket:", authUser._id, authUser.fullName);
-      newSocket.emit("addUser", authUser._id);
+      newSocket.on("connect", () => {
+        console.log("🔌 Socket connected successfully");
+        console.log("🔌 Socket ID:", newSocket.id);
+        setDebugInfo(`✅ Socket connected: ${newSocket.id}`);
+        toast.success("🔌 Socket connected!");
+        
+        // Now that we're connected, add the user
+        console.log("🔌 Adding user to socket:", authUser._id, authUser.fullName);
+        newSocket.emit("addUser", authUser._id);
+      });
 
       newSocket.on("getOnlineUsers", (users) => {
         console.log("👥 Online users updated:", users);
@@ -108,12 +116,7 @@ export const SocketContextProvider = ({ children }) => {
         console.error("Socket connection error:", error);
       });
 
-      newSocket.on("connect", () => {
-        console.log("🔌 Socket connected successfully");
-        console.log("🔌 Socket ID:", newSocket.id);
-        setDebugInfo(`✅ Socket connected: ${newSocket.id}`);
-        toast.success("🔌 Socket connected!");
-      });
+
 
       return () => {
         newSocket.off("callUser");
