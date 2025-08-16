@@ -243,7 +243,7 @@ const ChatPage = () => {
       <div className="col-span-1 lg:col-span-2 flex flex-col h-full relative">
         {/* Show VideoCall component when showVideoCall is true */}
         {showVideoCall && targetUser && (
-          <VideoCall targetUser={targetUser} onEndCall={handleEndCall} />
+          <VideoCall targetUser={targetUser} onEndCall={handleEndCall} autoCall={true} />
         )}
         
         {/* Chat Header */}

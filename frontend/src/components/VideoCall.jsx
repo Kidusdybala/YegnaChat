@@ -5,7 +5,7 @@ import { createPeer } from '../lib/simplePeerWrapper';
 import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const VideoCall = ({ targetUser, onEndCall }) => {
+const VideoCall = ({ targetUser, onEndCall, autoCall = false }) => {
   const { socket, incomingCall, setIncomingCall } = useSocketContext();
   const { authUser } = useAuthUser();
   const [stream, setStream] = useState(null);
@@ -93,6 +93,19 @@ const VideoCall = ({ targetUser, onEndCall }) => {
     };
   }, [stream]);
 
+  // Auto-call effect when autoCall is true and stream is ready
+  useEffect(() => {
+    if (autoCall && stream && !call && !callAccepted) {
+      console.log('🤖 Auto-calling user:', targetUser.fullName);
+      // Small delay to ensure stream is fully ready
+      const timer = setTimeout(() => {
+        callUser();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoCall, stream, call, callAccepted]);
+
   const answerCall = () => {
     setCallAccepted(true);
     const peer = createPeer({ initiator: false, trickle: false, stream });
@@ -118,9 +131,14 @@ const VideoCall = ({ targetUser, onEndCall }) => {
       return;
     }
     
+    console.log('📞 Initiating call to:', targetUser.fullName, 'ID:', targetUser._id);
+    console.log('📞 Socket connected:', socket?.connected);
+    console.log('📞 From user:', authUser.fullName, 'ID:', authUser._id);
+    
     const peer = createPeer({ initiator: true, trickle: false, stream });
 
     peer.on('signal', (data) => {
+      console.log('📞 Sending call signal to server');
       socket.emit('callUser', {
         userToCall: targetUser._id,
         signalData: data,
