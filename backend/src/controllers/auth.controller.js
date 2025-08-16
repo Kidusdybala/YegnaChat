@@ -78,7 +78,19 @@ export async function Login(req, res) {
     // Add headers to help with mobile cookie issues
     res.header('Access-Control-Allow-Credentials', 'true');
     
-    res.status(201).json({ success:true, user:user});
+    // For Chrome iOS, also send token in response body as fallback
+    const responseData = { 
+      success: true, 
+      user: user
+    };
+    
+    // Add token to response for Chrome iOS fallback
+    if (isChromeIOS) {
+      responseData.token = token;
+      console.log("🤖 Chrome iOS detected - sending token in response body");
+    }
+    
+    res.status(201).json(responseData);
   } catch (error) {
     res.status(500).json({ message: "internal server", error: error.message });
   }

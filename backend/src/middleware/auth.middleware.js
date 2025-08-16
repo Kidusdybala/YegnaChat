@@ -3,12 +3,23 @@ import User from "../models/User.js"; // Add `.js` if you're using ES Modules
 
 export const protectRoute = async (req, res, next) => {
   try {
-    const token = req.cookies.jwt;
+    // Try to get token from cookies first, then from Authorization header
+    let token = req.cookies.jwt;
+    
+    // Fallback for Chrome iOS - check Authorization header
+    if (!token && req.headers.authorization) {
+      const authHeader = req.headers.authorization;
+      if (authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+        console.log("🤖 Using token from Authorization header (Chrome iOS fallback)");
+      }
+    }
     
     // Debug logging for mobile issues
     console.log("🍪 Cookies received:", req.cookies);
     console.log("🔑 JWT token:", token ? "Present" : "Missing");
     console.log("📱 User-Agent:", req.headers['user-agent']);
+    console.log("🔐 Authorization header:", req.headers.authorization ? "Present" : "Missing");
 
     if (!token) {
       return res.status(401).json({ message: "Unauthorized: No token provided" });

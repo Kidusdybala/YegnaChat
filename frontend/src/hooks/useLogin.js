@@ -13,13 +13,22 @@ const useLogin = () => {
       console.log('✅ Login successful, data:', data);
       toast.success('Logged in successfully!');
       
+      // Check if we're on Chrome iOS and got a token in response
+      const userAgent = navigator.userAgent;
+      const isChromeIOS = userAgent.includes('CriOS');
+      
+      if (isChromeIOS && data.token) {
+        console.log('🤖 Chrome iOS detected - storing token in localStorage');
+        localStorage.setItem('auth_token', data.token);
+      }
+      
       // Clear all queries and cache
       queryClient.clear();
       
-      // Wait longer for cookie to be properly set and browser to save password
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for cookie/token to be set
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Test if cookie is working before redirect
+      // Test if auth is working before redirect
       try {
         const testAuth = await authAPI.getCurrentUser();
         console.log('🔍 Auth test before redirect:', testAuth);
