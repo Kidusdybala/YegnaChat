@@ -43,7 +43,8 @@ const io = new Server(server, {
       "http://localhost:3000",
       "http://yegnachat.local:5173",
       "https://yegna-chat.vercel.app",
-      "https://yegna-chat-kzsckozdx-kidus-projects-41c41b33.vercel.app"
+      "https://yegna-chat-kzsckozdx-kidus-projects-41c41b33.vercel.app",
+      "https://comfy-tiramisu-59c6aa.netlify.app"
     ].filter(Boolean),
     credentials: true
   }
@@ -61,7 +62,8 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://yegnachat.local:5173",
   "https://yegna-chat.vercel.app",
-  "https://yegna-chat-kzsckozdx-kidus-projects-41c41b33.vercel.app"
+  "https://yegna-chat-kzsckozdx-kidus-projects-41c41b33.vercel.app",
+  "https://comfy-tiramisu-59c6aa.netlify.app"
 ].filter(Boolean);
 
 console.log("🔧 CORS allowed origins:", allowedOrigins);

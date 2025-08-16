@@ -5,6 +5,14 @@
   "startCommand": "npm start",
   "port": 5001,
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "FRONTEND_URL": "https://comfy-tiramisu-59c6aa.netlify.app",
+    "PORT": "5001",
+    "MONGO_URL": "mongodb+srv://Kidus:sy75bg03zmgoHh7P@cluster0.cwkhv7q.mongodb.net/YegnaChat?retryWrites=true&w=majority&appName=Cluster0",
+    "JWT_SECRET": "9199324f923f69461fc2871459565c0f21fffb279a1afb96792f2db391e0b9ec",
+    "STREAM_API_KEY": "ecvfjq3tumma",
+    "STREAM_API_SECRET": "wffh274pqkajzvj8ukxzwxha9tjjwxdug42vgknmr6jjgjfttq8ywarmmkux3qua",
+    "EMAIL_USER": "sam684751@gmail.com",
+    "EMAIL_PASS": "frvujmuwzorwlvwi"
   }
 }
