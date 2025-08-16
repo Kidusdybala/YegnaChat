@@ -33,43 +33,7 @@ const server = createServer(app);
 // Socket.IO event handlers
 const onlineUsers = new Map();
 
-// Initialize Socket.IO with enhanced mobile support
-const io = new Server(server, {
-  cors: {
-    origin: [
-      process.env.FRONTEND_URL,
-      "http://localhost:5173", 
-      "http://localhost:5174", 
-      "http://localhost:3000",
-      "http://yegnachat.local:5173",
-      "https://yegna-chat.vercel.app",
-      "https://yegna-chat-kzsckozdx-kidus-projects-41c41b33.vercel.app",
-      "https://comfy-tiramisu-59c6aa.netlify.app",
-      // Allow any Netlify subdomain for your deployments
-      /^https:\/\/.*\.netlify\.app$/,
-      // Allow any Vercel subdomain for your deployments
-      /^https:\/\/.*\.vercel\.app$/
-    ].filter(Boolean),
-    credentials: true,
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization", "User-Agent"]
-  },
-  // Enable all transport methods for better compatibility
-  transports: ['polling', 'websocket'],
-  // Increase timeout for mobile networks
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  // Allow connections from mobile browsers
-  allowEIO3: true,
-  // Enable compression for better mobile performance
-  compression: true
-});
-
-// Make io instance available to the controllers
-app.set('io', io);
-app.set('onlineUsers', onlineUsers);
-
-// CORS configuration with debug logging
+// CORS configuration with debug logging - MUST MATCH Socket.io CORS
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   "http://localhost:5173", 
@@ -78,17 +42,105 @@ const allowedOrigins = [
   "http://yegnachat.local:5173",
   "https://yegna-chat.vercel.app",
   "https://yegna-chat-kzsckozdx-kidus-projects-41c41b33.vercel.app",
-  "https://comfy-tiramisu-59c6aa.netlify.app"
+  "https://comfy-tiramisu-59c6aa.netlify.app",
+  // Allow any Netlify subdomain for your deployments
+  /^https:\/\/.*\.netlify\.app$/,
+  // Allow any Vercel subdomain for your deployments
+  /^https:\/\/.*\.vercel\.app$/
 ].filter(Boolean);
+
+// Socket.io CORS function - same as Express CORS
+const socketCorsFunction = (origin, callback) => {
+  console.log("🔌 Socket.io CORS check for origin:", origin);
+  
+  // Allow requests with no origin (mobile apps, etc.)
+  if (!origin) {
+    console.log("🔌 No origin, allowing connection");
+    return callback(null, true);
+  }
+  
+  // Check against string origins
+  const stringOrigins = allowedOrigins.filter(o => typeof o === 'string');
+  if (stringOrigins.includes(origin)) {
+    console.log("✅ Socket.io origin allowed (string match):", origin);
+    return callback(null, true);
+  }
+  
+  // Check against regex patterns
+  const regexOrigins = allowedOrigins.filter(o => o instanceof RegExp);
+  const regexMatch = regexOrigins.some(regex => regex.test(origin));
+  if (regexMatch) {
+    console.log("✅ Socket.io origin allowed (regex match):", origin);
+    return callback(null, true);
+  }
+  
+  console.log("❌ Socket.io origin rejected:", origin);
+  callback(null, false);
+};
+
+// Initialize Socket.IO with enhanced mobile support and debugging
+const io = new Server(server, {
+  cors: {
+    origin: socketCorsFunction,
+    credentials: true,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "User-Agent", "Origin", "Accept"]
+  },
+  // Enable all transport methods for better compatibility
+  transports: ['polling', 'websocket'],
+  // Increase timeout for mobile networks
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  // Enhanced settings for Leapcell deployment
+  allowEIO3: true,
+  // Enable compression for better mobile performance
+  compression: true,
+  // Additional debugging and mobile compatibility
+  cookie: false,
+  serveClient: false,
+  // Enhanced error handling
+  connectTimeout: 45000,
+  // Allow upgrade from polling to websocket
+  allowUpgrades: true
+});
+
+// Make io instance available to the controllers
+app.set('io', io);
+app.set('onlineUsers', onlineUsers);
 
 console.log("🔧 CORS allowed origins:", allowedOrigins);
 console.log("🌍 NODE_ENV:", process.env.NODE_ENV);
 console.log("🌐 FRONTEND_URL:", process.env.FRONTEND_URL);
 
-// THEN add middleware
+// Enhanced CORS configuration for both regular HTTP and Socket.io
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: function (origin, callback) {
+    console.log("🌐 CORS check for origin:", origin);
+    
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check against string origins
+    const stringOrigins = allowedOrigins.filter(o => typeof o === 'string');
+    if (stringOrigins.includes(origin)) {
+      console.log("✅ Origin allowed (string match):", origin);
+      return callback(null, true);
+    }
+    
+    // Check against regex patterns
+    const regexOrigins = allowedOrigins.filter(o => o instanceof RegExp);
+    const regexMatch = regexOrigins.some(regex => regex.test(origin));
+    if (regexMatch) {
+      console.log("✅ Origin allowed (regex match):", origin);
+      return callback(null, true);
+    }
+    
+    console.log("❌ Origin rejected:", origin);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "User-Agent", "Origin", "Accept"]
 }));
 
 app.use(express.json({ limit: "10mb" })); // allow up to 10 MB
@@ -113,6 +165,27 @@ app.use('/api', apiLimiter);
 // Compression middleware
 // Add this middleware after your other middleware (before routes)
 app.use(compression());
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ 
+    status: "ok", 
+    timestamp: new Date().toISOString(),
+    socketio: "enabled",
+    cors: allowedOrigins.length + " origins configured"
+  });
+});
+
+// Socket.io health check endpoint
+app.get("/socket.io/health", (req, res) => {
+  res.json({ 
+    status: "ok",
+    transports: ['polling', 'websocket'],
+    cors: "configured",
+    timestamp: new Date().toISOString(),
+    onlineUsers: Array.from(onlineUsers.keys()).length
+  });
+});
 
 // Routes
 app.use("/api/auth", authRoutes);

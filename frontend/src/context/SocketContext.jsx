@@ -76,15 +76,38 @@ export const SocketContextProvider = ({ children }) => {
 
       setSocket(newSocket);
 
+      // Enhanced connection event with detailed logging
       newSocket.on("connect", () => {
         console.log("🔌 Socket connected successfully");
         console.log("🔌 Socket ID:", newSocket.id);
+        console.log("🔌 Transport:", newSocket.io.engine.transport.name);
+        console.log("🔌 Ready state:", newSocket.io.engine.readyState);
+        
         setDebugInfo(`✅ Socket connected: ${newSocket.id}`);
         toast.success("🔌 Socket connected!");
         
         // Now that we're connected, add the user
         console.log("🔌 Adding user to socket:", authUser._id, authUser.fullName);
         newSocket.emit("addUser", authUser._id);
+      });
+
+      // Enhanced transport events for debugging
+      newSocket.io.on("ping", () => {
+        console.log("🏓 Socket ping");
+      });
+
+      newSocket.io.on("pong", (latency) => {
+        console.log(`🏓 Socket pong - latency: ${latency}ms`);
+      });
+
+      newSocket.io.engine.on("upgrade", () => {
+        console.log("⬆️ Transport upgraded to:", newSocket.io.engine.transport.name);
+        setDebugInfo(`⬆️ Upgraded to: ${newSocket.io.engine.transport.name}`);
+      });
+
+      newSocket.io.engine.on("upgradeError", (error) => {
+        console.log("⬆️ Transport upgrade error:", error);
+        setDebugInfo(`⚠️ Upgrade error: ${error.message || 'Unknown'}`);
       });
 
       newSocket.on("getOnlineUsers", (users) => {

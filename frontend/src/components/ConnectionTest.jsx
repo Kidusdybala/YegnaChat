@@ -29,8 +29,50 @@ const ConnectionTest = () => {
     }
   }, [socket?.connected]);
 
-  const runConnectionTest = () => {
-    addTestResult('🧪 Starting connection test...', 'info');
+  const runConnectionTest = async () => {
+    addTestResult('🧪 Starting comprehensive connection test...', 'info');
+    
+    // Test 0: API Health Check
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const healthUrl = apiUrl.replace('/api', '/health');
+      
+      addTestResult(`🌐 Testing API health: ${healthUrl}`, 'info');
+      const healthResponse = await fetch(healthUrl, { 
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (healthResponse.ok) {
+        const healthData = await healthResponse.json();
+        addTestResult(`✅ API health check passed: ${healthData.status}`, 'success');
+      } else {
+        addTestResult(`❌ API health check failed: ${healthResponse.status}`, 'error');
+      }
+    } catch (error) {
+      addTestResult(`❌ API health check error: ${error.message}`, 'error');
+    }
+
+    // Test 0.5: Socket.io Health Check
+    try {
+      const socketHealthUrl = import.meta.env.VITE_API_URL.replace('/api', '/socket.io/health');
+      addTestResult(`🔌 Testing Socket.io health: ${socketHealthUrl}`, 'info');
+      
+      const socketHealthResponse = await fetch(socketHealthUrl, { 
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (socketHealthResponse.ok) {
+        const socketHealthData = await socketHealthResponse.json();
+        addTestResult(`✅ Socket.io health check passed`, 'success');
+        addTestResult(`📊 Server online users: ${socketHealthData.onlineUsers}`, 'info');
+      } else {
+        addTestResult(`❌ Socket.io health check failed: ${socketHealthResponse.status}`, 'error');
+      }
+    } catch (error) {
+      addTestResult(`❌ Socket.io health check error: ${error.message}`, 'error');
+    }
     
     // Test 1: Check socket exists
     if (!socket) {
@@ -44,11 +86,13 @@ const ConnectionTest = () => {
       addTestResult('✅ Socket is connected', 'success');
     } else {
       addTestResult('❌ Socket is not connected', 'error');
+      addTestResult(`🔍 Connection state: ${socket.readyState || 'unknown'}`, 'info');
     }
 
     // Test 3: Check transport method
     if (socket.io?.engine?.transport?.name) {
       addTestResult(`✅ Transport: ${socket.io.engine.transport.name}`, 'success');
+      addTestResult(`🔍 Ready state: ${socket.io.engine.readyState}`, 'info');
     } else {
       addTestResult('❌ No transport information available', 'error');
     }
@@ -57,6 +101,8 @@ const ConnectionTest = () => {
     if (socket.connected) {
       socket.emit('test', 'Connection test from ' + (authUser?.fullName || 'Unknown'));
       addTestResult('✅ Test message sent to server', 'success');
+    } else {
+      addTestResult('⚠️ Cannot send test message - socket not connected', 'warning');
     }
 
     // Test 5: Check user registration
@@ -72,9 +118,15 @@ const ConnectionTest = () => {
     const deviceType = isIOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop';
     addTestResult(`📱 Device: ${deviceType}`, 'info');
 
-    // Test 7: API URL
+    // Test 7: Connection URLs
     const apiUrl = import.meta.env.VITE_API_URL;
+    const socketUrl = apiUrl?.replace('/api', '') || "http://localhost:5001";
     addTestResult(`🌐 API URL: ${apiUrl}`, 'info');
+    addTestResult(`🔌 Socket URL: ${socketUrl}`, 'info');
+
+    // Test 8: CORS and Origin info
+    addTestResult(`🌍 Origin: ${window.location.origin}`, 'info');
+    addTestResult(`🌍 Host: ${window.location.host}`, 'info');
 
     toast.success('Connection test completed! Check results below.');
   };
