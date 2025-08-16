@@ -5,6 +5,7 @@ import { resolve } from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/',
   define: {
     global: 'window', // Define global as window
     'process.env': {}, // Provide a minimal process.env
@@ -27,8 +28,13 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
     rollupOptions: {
       external: [],
+      output: {
+        manualChunks: undefined,
+      },
     },
   },
   server: {
