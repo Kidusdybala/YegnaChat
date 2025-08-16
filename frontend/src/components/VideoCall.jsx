@@ -6,7 +6,7 @@ import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const VideoCall = ({ targetUser, onEndCall }) => {
-  const { socket } = useSocketContext();
+  const { socket, incomingCall, setIncomingCall } = useSocketContext();
   const { authUser } = useAuthUser();
   const [stream, setStream] = useState(null);
   const [call, setCall] = useState(null);
@@ -48,10 +48,12 @@ const VideoCall = ({ targetUser, onEndCall }) => {
 
     getMediaStream();
   
-    // Handle incoming calls
-    socket.on('callUser', ({ from, name: callerName, signal }) => {
-      setCall({ isReceivingCall: true, from, name: callerName, signal });
-    });
+    // Check if there's a global incoming call for this user
+    if (incomingCall && incomingCall.from === targetUser._id) {
+      setCall({ isReceivingCall: true, from: incomingCall.from, name: incomingCall.name, signal: incomingCall.signal });
+      // Clear the global incoming call since we're handling it
+      setIncomingCall(null);
+    }
 
     // Handle call ended by other user
     socket.on('callEnded', () => {
@@ -72,7 +74,6 @@ const VideoCall = ({ targetUser, onEndCall }) => {
           track.stop();
         });
       }
-      socket.off('callUser');
       socket.off('callAccepted');
       socket.off('callEnded');
     };

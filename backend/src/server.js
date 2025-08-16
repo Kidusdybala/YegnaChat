@@ -169,20 +169,31 @@ io.on('connection', (socket) => {
   
   // Handle video call signaling
   socket.on('callUser', ({ userToCall, signalData, from, name }) => {
+    console.log(`📞 Call request: ${name} (${from}) calling ${userToCall}`);
     const receiverSocketId = onlineUsers.get(userToCall);
+    console.log(`📞 Receiver socket ID: ${receiverSocketId}`);
+    console.log(`📞 Online users:`, Array.from(onlineUsers.keys()));
+    
     if (receiverSocketId) {
+      console.log(`📞 Forwarding call to ${userToCall}`);
       io.to(receiverSocketId).emit('callUser', {
         signal: signalData,
         from,
         name
       });
+    } else {
+      console.log(`📞 User ${userToCall} is not online`);
     }
   });
 
   socket.on('answerCall', (data) => {
+    console.log(`📞 Call answered by user, sending to: ${data.to}`);
     const callerSocketId = onlineUsers.get(data.to);
     if (callerSocketId) {
+      console.log(`📞 Forwarding answer to caller`);
       io.to(callerSocketId).emit('callAccepted', data.signal);
+    } else {
+      console.log(`📞 Caller ${data.to} is no longer online`);
     }
   });
 

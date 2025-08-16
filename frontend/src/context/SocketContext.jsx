@@ -15,6 +15,7 @@ export const SocketContextProvider = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [notifications, setNotifications] = useState(0);
+  const [incomingCall, setIncomingCall] = useState(null);
   const { authUser } = useAuthUser();
   const queryClient = useQueryClient();
 
@@ -35,7 +36,8 @@ export const SocketContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (authUser) {
-      const newSocket = io("http://localhost:5001", {
+      const socketURL = import.meta.env.VITE_API_URL?.replace('/api', '') || "http://localhost:5001";
+      const newSocket = io(socketURL, {
         query: { userId: authUser._id },
       });
 
@@ -76,6 +78,25 @@ export const SocketContextProvider = ({ children }) => {
         toast.success(`${data.accepterName || 'Someone'} accepted your friend request`);
       });
 
+      // Listen for incoming calls globally
+      newSocket.on("callUser", ({ from, name, signal }) => {
+        console.log("📞 Incoming call from:", name, "ID:", from);
+        setIncomingCall({ from, name, signal });
+        
+        // Show notification
+        toast.success(`📞 Incoming call from ${name}`, {
+          duration: 10000, // Show for 10 seconds
+          icon: '📞'
+        });
+      });
+
+      // Listen for call ended
+      newSocket.on("callEnded", () => {
+        console.log("📞 Call ended");
+        setIncomingCall(null);
+        toast.info("Call ended");
+      });
+
       // Add connection error handling
       newSocket.on("connect_error", (error) => {
         console.error("Socket connection error:", error);
@@ -86,6 +107,8 @@ export const SocketContextProvider = ({ children }) => {
       });
 
       return () => {
+        newSocket.off("callUser");
+        newSocket.off("callEnded");
         newSocket.disconnect();
         setSocket(null);
       };
@@ -101,6 +124,8 @@ export const SocketContextProvider = ({ children }) => {
     <SocketContext.Provider value={{ 
       socket, 
       onlineUsers,
+      incomingCall,
+      setIncomingCall,
       refreshUnreadCounts
     }}>
       {children}

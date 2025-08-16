@@ -17,6 +17,7 @@ import useAuthUser from "./hooks/useAuthUser";
 import Layout from "./components/Layout";
 import SettingsPage from "./Pages/SettingsPage";
 import ThemeProvider from "./context/ThemeContext";
+import IncomingCallModal from "./components/IncomingCallModal";
 
 const App = () => {
   const { authUser, isLoading, isError } = useAuthUser();
@@ -140,6 +141,9 @@ const App = () => {
           }
         />
         </Routes>
+
+        {/* Global incoming call modal - only show when user is authenticated */}
+        {authUser && <IncomingCallModal />}
 
         <Toaster />
       </div>

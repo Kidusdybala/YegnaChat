@@ -11,12 +11,11 @@ const CallPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { authUser } = useAuthUser();
-  const { socket, onlineUsers } = useSocketContext();
+  const { socket, onlineUsers, incomingCall, setIncomingCall } = useSocketContext();
   
   const [targetUser, setTargetUser] = useState(null);
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [incomingCall, setIncomingCall] = useState(null);
 
   // Get target user ID from URL params
   const targetUserId = searchParams.get('userId');
@@ -46,28 +45,12 @@ const CallPage = () => {
     fetchTargetUser();
   }, [targetUserId, navigate]);
 
-  // Listen for incoming calls
+  // Auto-start video call if there's an incoming call for this user
   useEffect(() => {
-    if (!socket) return;
-
-    const handleIncomingCall = ({ from, name, signal }) => {
-      setIncomingCall({ from, name, signal });
-    };
-
-    const handleCallEnded = () => {
-      setShowVideoCall(false);
-      setIncomingCall(null);
-      toast.info('Call ended');
-    };
-
-    socket.on('callUser', handleIncomingCall);
-    socket.on('callEnded', handleCallEnded);
-
-    return () => {
-      socket.off('callUser', handleIncomingCall);
-      socket.off('callEnded', handleCallEnded);
-    };
-  }, [socket]);
+    if (incomingCall && incomingCall.from === targetUserId) {
+      setShowVideoCall(true);
+    }
+  }, [incomingCall, targetUserId]);
 
   const handleStartCall = () => {
     if (!targetUser) {
