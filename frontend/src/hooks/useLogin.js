@@ -9,10 +9,19 @@ const useLogin = () => {
   
   const loginMutation = useMutation({
     mutationFn: authAPI.login,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success('Logged in successfully!');
-      queryClient.invalidateQueries({ queryKey: ['authUser'] });
-      navigate('/');
+      
+      // Add a small delay to ensure cookie is set
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Invalidate and refetch auth user
+      await queryClient.invalidateQueries({ queryKey: ['authUser'] });
+      
+      // Add another small delay before navigation
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 200);
     },
     onError: (error) => {
       console.error('Login error:', error);

@@ -52,12 +52,18 @@ export async function Login(req, res) {
     );
 
     // Set token in cookie 
-    res.cookie("jwt", token, { 
+    const cookieOptions = { 
       httpOnly: true, 
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
       secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60 * 1000 
-    }); // 7 days in ms
+    };
+    
+    console.log("🍪 Setting cookie with options:", cookieOptions);
+    console.log("🌍 NODE_ENV:", process.env.NODE_ENV);
+    console.log("📱 User-Agent:", req.headers['user-agent']);
+    
+    res.cookie("jwt", token, cookieOptions); // 7 days in ms
     res.status(201).json({ success:true, user:user});
   } catch (error) {
     res.status(500).json({ message: "internal server", error: error.message });

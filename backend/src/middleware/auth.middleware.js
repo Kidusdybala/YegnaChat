@@ -4,6 +4,11 @@ import User from "../models/User.js"; // Add `.js` if you're using ES Modules
 export const protectRoute = async (req, res, next) => {
   try {
     const token = req.cookies.jwt;
+    
+    // Debug logging for mobile issues
+    console.log("🍪 Cookies received:", req.cookies);
+    console.log("🔑 JWT token:", token ? "Present" : "Missing");
+    console.log("📱 User-Agent:", req.headers['user-agent']);
 
     if (!token) {
       return res.status(401).json({ message: "Unauthorized: No token provided" });
