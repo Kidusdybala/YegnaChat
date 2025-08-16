@@ -29,6 +29,19 @@ router.get("/me", protectRoute, (req, res) => {
   res.status(200).json({ success: true, user:req.user});
 });
 
+// Debug endpoint to check cookies without auth
+router.get("/debug-cookies", (req, res) => {
+  res.status(200).json({ 
+    success: true,
+    cookies: req.cookies,
+    headers: {
+      'user-agent': req.headers['user-agent'],
+      'cookie': req.headers.cookie
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check endpoint for Render
 router.get("/check", (req, res) => {
   res.status(200).json({ 

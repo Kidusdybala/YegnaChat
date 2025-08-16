@@ -1,15 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import useAuthUser from '../hooks/useAuthUser';
 import { toast } from 'react-hot-toast';
+import axiosInstance from '../lib/axios';
 
 export const LoginPage = () => {
   const { login, isLoginPending, loginError } = useAuthUser();
   const [formErrors, setFormErrors] = useState({});
+  const [debugInfo, setDebugInfo] = useState(null);
   const [credentials, setCredentials] = useState({
     email: '',
     password: '',
   });
+
+  // Debug function to check cookies
+  const checkCookies = async () => {
+    try {
+      const response = await axiosInstance.get('/auth/debug-cookies');
+      setDebugInfo(response.data);
+      console.log('🔍 Debug info:', response.data);
+    } catch (error) {
+      console.error('Debug check failed:', error);
+    }
+  };
+
+  useEffect(() => {
+    // Check cookies on component mount (for debugging)
+    checkCookies();
+  }, []);
 
   // Validate form fields
   const validateForm = () => {
@@ -39,7 +57,13 @@ export const LoginPage = () => {
       return;
     }
     
+    console.log('🚀 Starting login process...');
     login(credentials);
+    
+    // Check cookies after login attempt (with delay)
+    setTimeout(() => {
+      checkCookies();
+    }, 1000);
   };
 
   return (
@@ -62,6 +86,18 @@ export const LoginPage = () => {
           {loginError && loginError.response?.data?.message && (
             <div className="alert alert-error mb-4">
               <span>{loginError.response.data.message}</span>
+            </div>
+          )}
+
+          {/* DEBUG INFO (only in development) */}
+          {import.meta.env.DEV && debugInfo && (
+            <div className="alert alert-info mb-4 text-xs">
+              <details>
+                <summary>Debug Info (Dev Only)</summary>
+                <pre className="text-xs mt-2 overflow-auto">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </details>
             </div>
           )}
 
