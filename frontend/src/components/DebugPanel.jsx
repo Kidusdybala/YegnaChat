@@ -23,8 +23,19 @@ const DebugPanel = () => {
     if (socket) {
       socket.emit('test', 'Hello from frontend');
       toast.success('🧪 Test event sent');
+      console.log('🧪 Test connection details:');
+      console.log('- Transport:', socket.io.engine.transport.name);
+      console.log('- Ready state:', socket.io.engine.readyState);
+      console.log('- User agent:', navigator.userAgent);
+      console.log('- Is iOS:', /iPhone|iPad|iPod/.test(navigator.userAgent));
+      console.log('- Is mobile:', /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
     }
   };
+
+  // Detect device type
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isAndroid = /Android/.test(navigator.userAgent);
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   // Only show in development or when needed
   const showDebug = true; // Set to false to hide
@@ -36,13 +47,21 @@ const DebugPanel = () => {
       <div className="font-bold mb-2">🔧 Debug Info</div>
       <div className="space-y-1">
         <div>User: {authUser?.fullName || 'Not logged in'}</div>
+        <div>Device: {isIOS ? '📱 iOS' : isAndroid ? '🤖 Android' : '💻 Desktop'}</div>
         <div>Socket: {socket?.connected ? '✅ Connected' : '❌ Disconnected'}</div>
         <div>Socket ID: {socket?.id || 'None'}</div>
+        <div>Transport: {socket?.io?.engine?.transport?.name || 'N/A'}</div>
         <div className={onlineUsers.length === 0 ? 'text-red-500 font-bold' : ''}>
           Online Users: {onlineUsers.length}
         </div>
         <div>Status: {debugInfo || 'Waiting...'}</div>
-        {onlineUsers.length === 0 && socket?.connected && (
+        <div>API URL: {import.meta.env.VITE_API_URL}</div>
+        {socket?.connected && socket?.io?.engine && (
+          <div className="text-green-600">
+            Ready State: {socket.io.engine.readyState}
+          </div>
+        )}
+        {(!socket?.connected || onlineUsers.length === 0) && (
           <div className="space-y-1 mt-2">
             <button 
               onClick={retryAddUser}

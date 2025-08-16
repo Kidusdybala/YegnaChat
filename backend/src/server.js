@@ -33,7 +33,7 @@ const server = createServer(app);
 // Socket.IO event handlers
 const onlineUsers = new Map();
 
-// Initialize Socket.IO
+// Initialize Socket.IO with enhanced mobile support
 const io = new Server(server, {
   cors: {
     origin: [
@@ -44,10 +44,25 @@ const io = new Server(server, {
       "http://yegnachat.local:5173",
       "https://yegna-chat.vercel.app",
       "https://yegna-chat-kzsckozdx-kidus-projects-41c41b33.vercel.app",
-      "https://comfy-tiramisu-59c6aa.netlify.app"
+      "https://comfy-tiramisu-59c6aa.netlify.app",
+      // Allow any Netlify subdomain for your deployments
+      /^https:\/\/.*\.netlify\.app$/,
+      // Allow any Vercel subdomain for your deployments
+      /^https:\/\/.*\.vercel\.app$/
     ].filter(Boolean),
-    credentials: true
-  }
+    credentials: true,
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization", "User-Agent"]
+  },
+  // Enable all transport methods for better compatibility
+  transports: ['polling', 'websocket'],
+  // Increase timeout for mobile networks
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  // Allow connections from mobile browsers
+  allowEIO3: true,
+  // Enable compression for better mobile performance
+  compression: true
 });
 
 // Make io instance available to the controllers
@@ -109,10 +124,23 @@ app.use("/api/chat", chatRoutes);
 
 io.on('connection', (socket) => {
   console.log('🔌 New socket connection:', socket.id);
+  console.log('🔌 Transport method:', socket.conn.transport.name);
+  console.log('🔌 User agent:', socket.handshake.headers['user-agent']);
+  console.log('🔌 Origin:', socket.handshake.headers.origin);
+  console.log('🔌 Referer:', socket.handshake.headers.referer);
+  
+  // Detect if it's an iOS device
+  const userAgent = socket.handshake.headers['user-agent'] || '';
+  const isIOS = /iPhone|iPad|iPod/.test(userAgent);
+  const isAndroid = /Android/.test(userAgent);
+  
+  console.log(`🔌 Device detected: ${isIOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop'}`);
   
   // Test handler to verify connection
   socket.on('test', (data) => {
     console.log('🧪 Test event received:', data, 'from socket:', socket.id);
+    console.log('🧪 Current transport:', socket.conn.transport.name);
+    console.log('🧪 Socket connected:', socket.connected);
   });
 
   // Add user to online users when they connect

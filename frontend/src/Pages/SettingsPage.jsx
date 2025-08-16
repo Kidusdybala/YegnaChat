@@ -4,6 +4,7 @@ import { useTheme } from "../context/ThemeContext";
 import { THEMES } from "../constants";
 import useAuthUser from "../hooks/useAuthUser";
 import LogoutConfirmModal from "../components/LogoutConfirmModal";
+import ConnectionTest from "../components/ConnectionTest";
 import { 
   User, 
   Palette, 
@@ -17,7 +18,8 @@ import {
   Info,
   Check,
   LogOut,
-  Lock
+  Lock,
+  Wifi
 } from "lucide-react";
 
 const SettingsPage = () => {
@@ -199,6 +201,20 @@ const SettingsPage = () => {
                   </div>
                 </div>
               </details>
+            </div>
+          </div>
+
+          {/* Connection Diagnostics */}
+          <div className="card bg-base-200 shadow-lg">
+            <div className="card-body p-4 sm:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4">
+                <Wifi className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                <h2 className="card-title text-base sm:text-lg text-base-content">Connection Diagnostics</h2>
+              </div>
+              <p className="text-xs sm:text-sm text-base-content/60 mb-4">
+                Use this tool to diagnose connection issues, especially on mobile devices.
+              </p>
+              <ConnectionTest />
             </div>
           </div>
 
