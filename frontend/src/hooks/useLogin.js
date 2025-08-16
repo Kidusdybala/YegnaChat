@@ -10,18 +10,25 @@ const useLogin = () => {
   const loginMutation = useMutation({
     mutationFn: authAPI.login,
     onSuccess: async (data) => {
+      console.log('✅ Login successful, data:', data);
       toast.success('Logged in successfully!');
       
       // Longer delay for iPhone Safari cookie handling
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Invalidate and refetch auth user
+      // Force invalidate and refetch auth user
+      console.log('🔄 Invalidating auth queries...');
       await queryClient.invalidateQueries({ queryKey: ['authUser'] });
+      
+      // Force refetch to ensure we get the user data
+      console.log('🔄 Refetching auth user...');
+      await queryClient.refetchQueries({ queryKey: ['authUser'] });
       
       // Even longer delay before navigation for iPhone Safari
       setTimeout(() => {
+        console.log('🚀 Navigating to home...');
         navigate('/', { replace: true });
-      }, 1000);
+      }, 1500);
     },
     onError: (error) => {
       console.error('Login error:', error);

@@ -10,10 +10,21 @@ export const useAuth = () => {
     refetch
   } = useQuery({
     queryKey: ["authUser"],
-    queryFn: authAPI.getCurrentUser
+    queryFn: authAPI.getCurrentUser,
+    retry: 1,
+    staleTime: 0, // Always refetch
+    cacheTime: 0  // Don't cache
   });
   
   const authUser = data?.user;
+  
+  // Debug logging
+  console.log("🔍 Auth Query State:", {
+    data,
+    authUser,
+    isLoading,
+    isError
+  });
   
   return {
     authUser,

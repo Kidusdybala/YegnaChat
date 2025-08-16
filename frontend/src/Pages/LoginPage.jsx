@@ -13,12 +13,28 @@ export const LoginPage = () => {
     password: '',
   });
 
-  // Debug function to check cookies
+  // Debug function to check cookies and auth
   const checkCookies = async () => {
     try {
-      const response = await axiosInstance.get('/auth/debug-cookies');
-      setDebugInfo(response.data);
-      console.log('🔍 Debug info:', response.data);
+      const debugResponse = await axiosInstance.get('/auth/debug-cookies');
+      
+      // Also test the /auth/me endpoint directly
+      try {
+        const authResponse = await axiosInstance.get('/auth/me');
+        console.log('🔍 Auth /me response:', authResponse.data);
+        setDebugInfo({
+          ...debugResponse.data,
+          authTest: authResponse.data
+        });
+      } catch (authError) {
+        console.log('🔍 Auth /me error:', authError.response?.data);
+        setDebugInfo({
+          ...debugResponse.data,
+          authError: authError.response?.data
+        });
+      }
+      
+      console.log('🔍 Debug info:', debugResponse.data);
     } catch (error) {
       console.error('Debug check failed:', error);
     }
