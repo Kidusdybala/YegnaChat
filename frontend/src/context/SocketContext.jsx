@@ -17,6 +17,7 @@ export const SocketContextProvider = ({ children }) => {
   const [notifications, setNotifications] = useState(0);
   const [incomingCall, setIncomingCall] = useState(null);
   const [debugInfo, setDebugInfo] = useState('');
+  const [connectionState, setConnectionState] = useState('disconnected');
   const { authUser } = useAuthUser();
   const queryClient = useQueryClient();
 
@@ -113,8 +114,8 @@ export const SocketContextProvider = ({ children }) => {
       newSocket.on("getOnlineUsers", (users) => {
         console.log("👥 Online users updated:", users);
         setOnlineUsers(users);
-        setDebugInfo(`👥 Online users: ${users.length}`);
-        toast.success(`👥 ${users.length} users online`);
+        setDebugInfo(prev => `✅ Connected | 👥 Online: ${users.length}`);
+        // Don't show toast for online users updates - too spammy
       });
 
       // Listen for new messages
