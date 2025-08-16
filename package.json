@@ -4,7 +4,8 @@
   "scripts": {
     "start": "cd backend && npm start",
     "install-backend": "cd backend && npm install",
-    "dev": "cd backend && npm run dev"
+    "dev": "cd backend && npm run dev",
+    "postinstall": "cd backend && npm install"
   },
   "dependencies": {
     "lucide": "^0.536.0",
