@@ -51,19 +51,33 @@ export async function Login(req, res) {
       { expiresIn: "7d" }
     );
 
-    // Set token in cookie with iPhone Safari compatibility
+    // Detect Chrome on iOS
+    const userAgent = req.headers['user-agent'] || '';
+    const isChromeIOS = userAgent.includes('CriOS');
+    
+    // Set token in cookie with Chrome iOS compatibility
     const cookieOptions = { 
       httpOnly: true, 
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
+      // Chrome iOS has issues with SameSite=None, use Lax for Chrome iOS
+      sameSite: (process.env.NODE_ENV === "production" && !isChromeIOS) ? "none" : "lax", 
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      // Add path to ensure cookie is sent with all requests
+      path: '/'
     };
     
     console.log("🍪 Setting cookie with options:", cookieOptions);
     console.log("🌍 NODE_ENV:", process.env.NODE_ENV);
     console.log("📱 User-Agent:", req.headers['user-agent']);
+    console.log("🔗 Request origin:", req.headers.origin);
+    console.log("🔗 Request host:", req.headers.host);
+    console.log("🤖 Is Chrome iOS:", isChromeIOS);
     
     res.cookie("jwt", token, cookieOptions); // 7 days in ms
+    
+    // Add headers to help with mobile cookie issues
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
     res.status(201).json({ success:true, user:user});
   } catch (error) {
     res.status(500).json({ message: "internal server", error: error.message });

@@ -16,12 +16,25 @@ const useLogin = () => {
       // Clear all queries and cache
       queryClient.clear();
       
-      // Wait for cookie to be set
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait longer for cookie to be properly set and browser to save password
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Force a complete reload of the page to reset React Query state
-      console.log('🔄 Forcing page reload to reset auth state...');
-      window.location.href = '/';
+      // Test if cookie is working before redirect
+      try {
+        const testAuth = await authAPI.getCurrentUser();
+        console.log('🔍 Auth test before redirect:', testAuth);
+        
+        if (testAuth?.user) {
+          console.log('✅ Auth working, redirecting...');
+          window.location.href = '/';
+        } else {
+          console.log('❌ Auth not working, staying on login');
+          toast.error('Login failed - please try again');
+        }
+      } catch (error) {
+        console.log('❌ Auth test failed:', error);
+        toast.error('Login failed - please try again');
+      }
     },
     onError: (error) => {
       console.error('Login error:', error);
