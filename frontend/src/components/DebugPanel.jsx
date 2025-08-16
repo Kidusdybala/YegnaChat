@@ -11,7 +11,18 @@ const DebugPanel = () => {
     if (socket && authUser) {
       console.log('🔄 Manually retrying addUser:', authUser._id);
       socket.emit('addUser', authUser._id);
-      toast.success('🔄 Retrying user registration...');
+      toast.success(`🔄 Sending addUser: ${authUser._id}`);
+      toast.success(`Socket connected: ${socket.connected}`);
+      toast.success(`Socket ID: ${socket.id}`);
+    } else {
+      toast.error('❌ No socket or user available');
+    }
+  };
+
+  const testConnection = () => {
+    if (socket) {
+      socket.emit('test', 'Hello from frontend');
+      toast.success('🧪 Test event sent');
     }
   };
 
@@ -32,12 +43,20 @@ const DebugPanel = () => {
         </div>
         <div>Status: {debugInfo || 'Waiting...'}</div>
         {onlineUsers.length === 0 && socket?.connected && (
-          <button 
-            onClick={retryAddUser}
-            className="btn btn-xs btn-primary mt-2 w-full"
-          >
-            🔄 Retry Registration
-          </button>
+          <div className="space-y-1 mt-2">
+            <button 
+              onClick={retryAddUser}
+              className="btn btn-xs btn-primary w-full"
+            >
+              🔄 Retry Registration
+            </button>
+            <button 
+              onClick={testConnection}
+              className="btn btn-xs btn-secondary w-full"
+            >
+              🧪 Test Connection
+            </button>
+          </div>
         )}
       </div>
     </div>

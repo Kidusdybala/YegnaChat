@@ -110,6 +110,11 @@ app.use("/api/chat", chatRoutes);
 io.on('connection', (socket) => {
   console.log('🔌 New socket connection:', socket.id);
   
+  // Test handler to verify connection
+  socket.on('test', (data) => {
+    console.log('🧪 Test event received:', data, 'from socket:', socket.id);
+  });
+
   // Add user to online users when they connect
   socket.on('addUser', (userId) => {
     console.log('👤 Adding user to online list:', userId, 'Socket ID:', socket.id);
