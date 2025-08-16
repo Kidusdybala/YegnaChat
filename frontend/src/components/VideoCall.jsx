@@ -139,6 +139,7 @@ const VideoCall = ({ targetUser, onEndCall, autoCall = false }) => {
 
     peer.on('signal', (data) => {
       console.log('📞 Sending call signal to server');
+      toast.success(`📞 Calling ${targetUser.fullName}...`);
       socket.emit('callUser', {
         userToCall: targetUser._id,
         signalData: data,

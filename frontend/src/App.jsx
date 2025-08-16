@@ -18,6 +18,7 @@ import Layout from "./components/Layout";
 import SettingsPage from "./Pages/SettingsPage";
 import ThemeProvider from "./context/ThemeContext";
 import IncomingCallModal from "./components/IncomingCallModal";
+import DebugPanel from "./components/DebugPanel";
 
 const App = () => {
   const { authUser, isLoading, isError } = useAuthUser();
@@ -144,6 +145,9 @@ const App = () => {
 
         {/* Global incoming call modal - only show when user is authenticated */}
         {authUser && <IncomingCallModal />}
+
+        {/* Debug panel - shows connection status */}
+        {authUser && <DebugPanel />}
 
         <Toaster />
       </div>

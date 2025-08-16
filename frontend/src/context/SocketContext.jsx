@@ -16,6 +16,7 @@ export const SocketContextProvider = ({ children }) => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [notifications, setNotifications] = useState(0);
   const [incomingCall, setIncomingCall] = useState(null);
+  const [debugInfo, setDebugInfo] = useState('');
   const { authUser } = useAuthUser();
   const queryClient = useQueryClient();
 
@@ -49,6 +50,8 @@ export const SocketContextProvider = ({ children }) => {
       newSocket.on("getOnlineUsers", (users) => {
         console.log("👥 Online users updated:", users);
         setOnlineUsers(users);
+        setDebugInfo(`👥 Online users: ${users.length}`);
+        toast.success(`👥 ${users.length} users online`);
       });
 
       // Listen for new messages
@@ -84,6 +87,7 @@ export const SocketContextProvider = ({ children }) => {
       newSocket.on("callUser", ({ from, name, signal }) => {
         console.log("📞 Incoming call from:", name, "ID:", from);
         setIncomingCall({ from, name, signal });
+        setDebugInfo(`📞 Incoming call from ${name}`);
         
         // Show notification
         toast.success(`📞 Incoming call from ${name}`, {
@@ -107,6 +111,8 @@ export const SocketContextProvider = ({ children }) => {
       newSocket.on("connect", () => {
         console.log("🔌 Socket connected successfully");
         console.log("🔌 Socket ID:", newSocket.id);
+        setDebugInfo(`✅ Socket connected: ${newSocket.id}`);
+        toast.success("🔌 Socket connected!");
       });
 
       return () => {
@@ -129,6 +135,7 @@ export const SocketContextProvider = ({ children }) => {
       onlineUsers,
       incomingCall,
       setIncomingCall,
+      debugInfo,
       refreshUnreadCounts
     }}>
       {children}
