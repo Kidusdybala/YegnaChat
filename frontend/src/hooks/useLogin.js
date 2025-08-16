@@ -13,22 +13,15 @@ const useLogin = () => {
       console.log('✅ Login successful, data:', data);
       toast.success('Logged in successfully!');
       
-      // Longer delay for iPhone Safari cookie handling
+      // Clear all queries and cache
+      queryClient.clear();
+      
+      // Wait for cookie to be set
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Force invalidate and refetch auth user
-      console.log('🔄 Invalidating auth queries...');
-      await queryClient.invalidateQueries({ queryKey: ['authUser'] });
-      
-      // Force refetch to ensure we get the user data
-      console.log('🔄 Refetching auth user...');
-      await queryClient.refetchQueries({ queryKey: ['authUser'] });
-      
-      // Even longer delay before navigation for iPhone Safari
-      setTimeout(() => {
-        console.log('🚀 Navigating to home...');
-        navigate('/', { replace: true });
-      }, 1500);
+      // Force a complete reload of the page to reset React Query state
+      console.log('🔄 Forcing page reload to reset auth state...');
+      window.location.href = '/';
     },
     onError: (error) => {
       console.error('Login error:', error);

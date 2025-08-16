@@ -13,7 +13,9 @@ export const useAuth = () => {
     queryFn: authAPI.getCurrentUser,
     retry: 1,
     staleTime: 0, // Always refetch
-    cacheTime: 0  // Don't cache
+    cacheTime: 0, // Don't cache
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
   
   const authUser = data?.user;
