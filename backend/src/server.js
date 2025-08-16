@@ -27,6 +27,9 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Trust proxy for Leapcell deployment
+app.set('trust proxy', true);
+
 // Create HTTP server
 const server = createServer(app);
 
@@ -150,13 +153,25 @@ app.use(cookieParser());
 // Add static file middleware AFTER app is initialized
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// Rate limiting middleware
+// Rate limiting middleware with proxy support
 // Add this before your routes
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 1000, // increased limit
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip rate limiting for Socket.io requests
+  skip: (req) => {
+    return req.path.startsWith('/socket.io/');
+  },
+  // Use proper key generator for proxy environments
+  keyGenerator: (req) => {
+    return req.ip || req.connection.remoteAddress || 'unknown';
+  },
+  // Handle proxy headers properly
+  validate: {
+    xForwardedForHeader: false, // Disable validation that was causing errors
+  }
 });
 
 // Apply to all API routes

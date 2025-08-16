@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Test</title>
+</head>
+<body>
+    <h2>🔧 Quick Backend Test</h2>
+    <button onclick="testHealth()">Test API Health</button>
+    <button onclick="testSocket()">Test Socket Health</button>
+    <div id="results"></div>
+
+    <script>
+        async function testHealth() {
+            try {
+                const response = await fetch('https://egnahat-kidusrash6706-0lwwbd1y.leapcell.dev/health');
+                const data = await response.json();
+                document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('results').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        async function testSocket() {
+            try {
+                const response = await fetch('https://egnahat-kidusrash6706-0lwwbd1y.leapcell.dev/socket.io/health');
+                const data = await response.json();
+                document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('results').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
