@@ -11,12 +11,21 @@ axiosInstance.interceptors.request.use((config) => {
   const userAgent = navigator.userAgent;
   const isChromeIOS = userAgent.includes('CriOS');
   
+  console.log('🔍 Request interceptor - User Agent:', userAgent);
+  console.log('🔍 Is Chrome iOS:', isChromeIOS);
+  
   if (isChromeIOS) {
     const token = localStorage.getItem('auth_token');
+    console.log('🔍 Token from localStorage:', token ? 'Present' : 'Missing');
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log('🤖 Chrome iOS - Adding Authorization header');
+    } else {
+      console.log('❌ Chrome iOS - No token in localStorage');
     }
+  } else {
+    console.log('🔍 Not Chrome iOS - using cookies');
   }
   
   return config;

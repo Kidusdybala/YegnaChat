@@ -17,9 +17,16 @@ const useLogin = () => {
       const userAgent = navigator.userAgent;
       const isChromeIOS = userAgent.includes('CriOS');
       
+      console.log('🔍 Login success - User Agent:', userAgent);
+      console.log('🔍 Is Chrome iOS:', isChromeIOS);
+      console.log('🔍 Response data:', data);
+      
       if (isChromeIOS && data.token) {
         console.log('🤖 Chrome iOS detected - storing token in localStorage');
         localStorage.setItem('auth_token', data.token);
+        console.log('✅ Token stored in localStorage');
+      } else if (isChromeIOS && !data.token) {
+        console.log('❌ Chrome iOS but no token in response');
       }
       
       // Clear all queries and cache
