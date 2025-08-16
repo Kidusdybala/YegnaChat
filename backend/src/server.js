@@ -41,7 +41,9 @@ const io = new Server(server, {
       "http://localhost:5173", 
       "http://localhost:5174", 
       "http://localhost:3000",
-      "http://yegnachat.local:5173"
+      "http://yegnachat.local:5173",
+      "https://yegna-chat.vercel.app",
+      "https://yegna-chat-kzsckozdx-kidus-projects-41c41b33.vercel.app"
     ].filter(Boolean),
     credentials: true
   }
@@ -57,7 +59,9 @@ const allowedOrigins = [
   "http://localhost:5173", 
   "http://localhost:5174", 
   "http://localhost:3000",
-  "http://yegnachat.local:5173"
+  "http://yegnachat.local:5173",
+  "https://yegna-chat.vercel.app",
+  "https://yegna-chat-kzsckozdx-kidus-projects-41c41b33.vercel.app"
 ].filter(Boolean);
 
 console.log("🔧 CORS allowed origins:", allowedOrigins);
