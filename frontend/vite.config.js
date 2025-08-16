@@ -7,8 +7,18 @@ export default defineConfig({
   plugins: [react()],
   base: '/',
   define: {
-    global: 'window', // Define global as window
-    'process.env': {}, // Provide a minimal process.env
+    global: 'globalThis',
+    process: JSON.stringify({
+      env: {
+        NODE_ENV: process.env.NODE_ENV || 'production'
+      },
+      platform: 'browser',
+      version: ''
+    }),
+    'process.env': JSON.stringify({
+      NODE_ENV: process.env.NODE_ENV || 'production'
+    }),
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
   },
   resolve: {
     alias: {
