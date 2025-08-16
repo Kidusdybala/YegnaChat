@@ -51,12 +51,12 @@ export async function Login(req, res) {
       { expiresIn: "7d" }
     );
 
-    // Set token in cookie 
+    // Set token in cookie with iPhone Safari compatibility
     const cookieOptions = { 
       httpOnly: true, 
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000 
+      maxAge: 7 * 24 * 60 * 60 * 1000
     };
     
     console.log("🍪 Setting cookie with options:", cookieOptions);

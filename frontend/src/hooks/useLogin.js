@@ -12,16 +12,16 @@ const useLogin = () => {
     onSuccess: async (data) => {
       toast.success('Logged in successfully!');
       
-      // Add a small delay to ensure cookie is set
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Longer delay for iPhone Safari cookie handling
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Invalidate and refetch auth user
       await queryClient.invalidateQueries({ queryKey: ['authUser'] });
       
-      // Add another small delay before navigation
+      // Even longer delay before navigation for iPhone Safari
       setTimeout(() => {
         navigate('/', { replace: true });
-      }, 200);
+      }, 1000);
     },
     onError: (error) => {
       console.error('Login error:', error);
