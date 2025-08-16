@@ -108,12 +108,14 @@ app.use("/api/chat", chatRoutes);
 // Backend only serves API routes
 
 io.on('connection', (socket) => {
+  console.log('🔌 New socket connection:', socket.id);
   
   // Add user to online users when they connect
   socket.on('addUser', (userId) => {
+    console.log('👤 Adding user to online list:', userId, 'Socket ID:', socket.id);
     onlineUsers.set(userId, socket.id);
+    console.log('👥 Current online users:', Array.from(onlineUsers.keys()));
     io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
-
   });
   
   // Handle sending messages
@@ -157,10 +159,13 @@ io.on('connection', (socket) => {
   
   // Handle disconnection
   socket.on('disconnect', () => {
+    console.log('🔌 Socket disconnected:', socket.id);
     // Remove user from online users
     for (const [userId, socketId] of onlineUsers.entries()) {
       if (socketId === socket.id) {
+        console.log('👤 Removing user from online list:', userId);
         onlineUsers.delete(userId);
+        console.log('👥 Remaining online users:', Array.from(onlineUsers.keys()));
         io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
         break;
       }
