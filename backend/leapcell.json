@@ -1,0 +1,10 @@
+{
+  "name": "yegnachat-backend",
+  "runtime": "nodejs",
+  "buildCommand": "npm install",
+  "startCommand": "npm start",
+  "port": 5001,
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

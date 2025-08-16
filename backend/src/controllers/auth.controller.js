@@ -12,7 +12,11 @@ import {
 
 const router = express.Router();
 export function Logout(req, res) {
-  res.clearCookie("jwt"); 
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production"
+  }); 
   res.status(200).json({ message: "Logged out successfully" });
 }
 
@@ -48,10 +52,12 @@ export async function Login(req, res) {
     );
 
     // Set token in cookie 
-    res.cookie("jwt", token, { httpOnly: true, 
-      sameSite:"strict", 
+    res.cookie("jwt", token, { 
+      httpOnly: true, 
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days in ms
+      maxAge: 7 * 24 * 60 * 60 * 1000 
+    }); // 7 days in ms
     res.status(201).json({ success:true, user:user});
   } catch (error) {
     res.status(500).json({ message: "internal server", error: error.message });
@@ -137,8 +143,6 @@ export async function Signup(req, res) {
     });
     
     await user.save();
-
-
     // Send verification email
     try {
       await sendVerificationEmail(email, verificationCode, fullName);
@@ -163,8 +167,7 @@ export async function editProfile(req, res) {
     const {
       fullName,
     } = req.body;
-
-    // Update validation to not require language fields
+   
     if (!fullName) {
       return res.status(400).json({
         message: "All fields are required",
@@ -183,8 +186,6 @@ export async function editProfile(req, res) {
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
-
-
     return res.status(200).json({
       message: "User updated successfully",
       user: updatedUser,
@@ -200,14 +201,12 @@ export async function changePassword(req, res) {
   try {
     const userId = req.user.id;
     const { currentPassword, newPassword } = req.body;
-
     // Validate required fields
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         message: "Current password and new password are required"
       });
     }
-
     // Validate new password length
     if (newPassword.length < 4 || newPassword.length > 15) {
       return res.status(400).json({
@@ -234,12 +233,9 @@ export async function changePassword(req, res) {
         message: "New password must be different from current password"
       });
     }
-
     // Update password (the pre-save middleware will hash it)
     user.password = newPassword;
     await user.save();
-
-
 
     return res.status(200).json({
       message: "Password changed successfully"
@@ -250,19 +246,16 @@ export async function changePassword(req, res) {
     res.status(500).json({ message: "Internal server error" });
   }
 }
-
 // Email Verification Handler
 export async function verifyEmail(req, res) {
   try {
     const { email, code } = req.body;
-
     // Validate required fields
     if (!email || !code) {
       return res.status(400).json({
         message: "Email and verification code are required"
       });
     }
-
     // Find user with matching email and verification code
     const user = await User.findOne({ 
       email,
@@ -288,14 +281,11 @@ export async function verifyEmail(req, res) {
         name: user.fullName,
         image: user.profilePic || "",
       });
-
     } catch (error) {
       console.error(`Error upserting user ${user._id}:`, error);
     }
 
     await user.save();
-
-
 
     return res.status(200).json({
       message: "Email verified successfully! You can now log in."
