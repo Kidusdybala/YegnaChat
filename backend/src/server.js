@@ -36,9 +36,13 @@ const onlineUsers = new Map();
 // Initialize Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? [process.env.FRONTEND_URL, "http://localhost:5173", "http://localhost:5174", "http://localhost:3000"]
-      : ["http://localhost:5173", "http://localhost:5174", "http://yegnachat.local:5173"],
+    origin: [
+      process.env.FRONTEND_URL,
+      "http://localhost:5173", 
+      "http://localhost:5174", 
+      "http://localhost:3000",
+      "http://yegnachat.local:5173"
+    ].filter(Boolean),
     credentials: true
   }
 });
@@ -49,9 +53,13 @@ app.set('onlineUsers', onlineUsers);
 
 // THEN add middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL, "http://localhost:5173", "http://localhost:5174", "http://localhost:3000"]
-    : ["http://localhost:5173", "http://localhost:5174", "http://yegnachat.local:5173"],
+  origin: [
+    process.env.FRONTEND_URL,
+    "http://localhost:5173", 
+    "http://localhost:5174", 
+    "http://localhost:3000",
+    "http://yegnachat.local:5173"
+  ].filter(Boolean),
   credentials: true
 }));
 
