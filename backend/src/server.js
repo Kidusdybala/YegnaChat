@@ -51,15 +51,22 @@ const io = new Server(server, {
 app.set('io', io);
 app.set('onlineUsers', onlineUsers);
 
+// CORS configuration with debug logging
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173", 
+  "http://localhost:5174", 
+  "http://localhost:3000",
+  "http://yegnachat.local:5173"
+].filter(Boolean);
+
+console.log("🔧 CORS allowed origins:", allowedOrigins);
+console.log("🌍 NODE_ENV:", process.env.NODE_ENV);
+console.log("🌐 FRONTEND_URL:", process.env.FRONTEND_URL);
+
 // THEN add middleware
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL,
-    "http://localhost:5173", 
-    "http://localhost:5174", 
-    "http://localhost:3000",
-    "http://yegnachat.local:5173"
-  ].filter(Boolean),
+  origin: allowedOrigins,
   credentials: true
 }));
 
