@@ -1,4 +1,4 @@
-FORCE_NETLIFY_DEPLOY_v3
-timestamp: 2025-01-16T17:46:00Z
-socket fixes applied
-frontend cache bust
+FORCE_NETLIFY_DEPLOY_v4
+timestamp: 2025-01-18T17:30:00Z
+backend migrated to new leapcell account
+new backend URL: https://egnahat-buddykk7781-6o6zpy2c.leapcell.dev/api
