@@ -84,8 +84,10 @@ const socketCorsFunction = (origin, callback) => {
 // Initialize Socket.IO with enhanced mobile support and debugging
 console.log("🔌 Initializing Socket.IO server...");
 console.log("🔌 Server instance:", !!server);
+console.log("🔌 Server listening:", server.listening);
 console.log("🔌 Socket CORS function:", !!socketCorsFunction);
 
+// Simplified Socket.IO configuration for Leapcell compatibility
 const io = new Server(server, {
   cors: {
     origin: socketCorsFunction,
@@ -93,26 +95,31 @@ const io = new Server(server, {
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "User-Agent", "Origin", "Accept"]
   },
-  // Enable all transport methods for better compatibility
+  // Basic transport configuration
   transports: ['polling', 'websocket'],
-  // Increase timeout for mobile networks
+  // Basic timeout settings
   pingTimeout: 60000,
   pingInterval: 25000,
-  // Enhanced settings for Leapcell deployment
-  allowEIO3: true,
-  // Enable compression for better mobile performance
-  compression: true,
-  // Additional debugging and mobile compatibility
-  cookie: false,
+  // Simplified settings for deployment
   serveClient: false,
-  // Enhanced error handling
-  connectTimeout: 45000,
-  // Allow upgrade from polling to websocket
-  allowUpgrades: true
+  allowUpgrades: true,
+  // Enable all Engine.IO protocols
+  allowEIO3: true,
+  // Basic connection settings
+  connectTimeout: 45000
 });
 
-console.log("🔌 Socket.IO server initialized:", !!io);
-console.log("🔌 Socket.IO engine:", !!io.engine);
+console.log("🔌 Socket.IO server created:", !!io);
+// Skip version check for now in ES modules
+
+// Test Socket.IO initialization
+try {
+  console.log("🔌 Socket.IO engine available:", !!io.engine);
+  console.log("🔌 Socket.IO sockets namespace:", !!io.sockets);
+  console.log("🔌 Socket.IO listening:", io.engine?.listening);
+} catch (error) {
+  console.error("❌ Socket.IO initialization error:", error);
+}
 
 // Make io instance available to the controllers
 app.set('io', io);
@@ -201,22 +208,47 @@ app.get("/health", (req, res) => {
 // Socket.io health check endpoint
 app.get("/socket.io/health", (req, res) => {
   try {
-    res.json({ 
+    const socketStatus = {
       status: "ok",
       transports: ['polling', 'websocket'],
       cors: "configured",
       timestamp: new Date().toISOString(),
       onlineUsers: Array.from(onlineUsers.keys()).length,
       socketServer: io ? "initialized" : "not initialized",
-      port: PORT
-    });
+      port: PORT,
+      environment: process.env.NODE_ENV,
+      frontendUrl: process.env.FRONTEND_URL
+    };
+    
+    // Additional Socket.IO specific checks
+    if (io) {
+      socketStatus.socketEngine = io.engine ? "available" : "not available";
+      socketStatus.socketListeners = Object.keys(io._events || {});
+    }
+    
+    console.log("🔍 Socket health check requested:", socketStatus);
+    res.json(socketStatus);
   } catch (error) {
+    console.error("❌ Socket health check error:", error);
     res.status(500).json({
       status: "error",
       error: error.message,
       timestamp: new Date().toISOString()
     });
   }
+});
+
+// Alternative debug endpoint that bypasses Socket.IO completely
+app.get("/debug/socket", (req, res) => {
+  res.json({
+    status: "debug-ok",
+    message: "Direct endpoint working",
+    timestamp: new Date().toISOString(),
+    socketInitialized: !!io,
+    onlineUsersCount: onlineUsers.size,
+    port: PORT,
+    env: process.env.NODE_ENV
+  });
 });
 
 // Routes
@@ -352,10 +384,20 @@ connectDB()
   .then(() => {
     // Use 'server' instead of 'app' to listen
     server.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Socket.IO is ready for connections`);
+      console.log(`✅ Server is running on port ${PORT}`);
+      console.log(`✅ Socket.IO is ready for connections`);
+      
+      // Additional verification after server starts
+      setTimeout(() => {
+        console.log("🔍 Post-startup Socket.IO check:");
+        console.log("🔌 Server listening:", server.listening);
+        console.log("🔌 Socket.IO engine ready:", !!io.engine);
+        console.log("🔌 Socket.IO engine listening:", io.engine?.listening);
+        console.log("🔌 Online users map initialized:", !!onlineUsers);
+      }, 1000);
     });
   })
   .catch((error) => {
-    console.error("Failed to connect to MongoDB:", error);
+    console.error("❌ Failed to connect to MongoDB:", error);
+    process.exit(1);
   });
