@@ -81,49 +81,59 @@ const socketCorsFunction = (origin, callback) => {
   callback(null, false);
 };
 
-// Initialize Socket.IO with enhanced mobile support and debugging
-console.log("🔌 Initializing Socket.IO server...");
-console.log("🔌 Server instance:", !!server);
-console.log("🔌 Server listening:", server.listening);
-console.log("🔌 Socket CORS function:", !!socketCorsFunction);
+// Global variable to hold Socket.IO instance
+let io = null;
 
-// Simplified Socket.IO configuration for Leapcell compatibility
-const io = new Server(server, {
-  cors: {
-    origin: socketCorsFunction,
-    credentials: true,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "User-Agent", "Origin", "Accept"]
-  },
-  // Basic transport configuration
-  transports: ['polling', 'websocket'],
-  // Basic timeout settings
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  // Simplified settings for deployment
-  serveClient: false,
-  allowUpgrades: true,
-  // Enable all Engine.IO protocols
-  allowEIO3: true,
-  // Basic connection settings
-  connectTimeout: 45000
-});
+// Function to initialize Socket.IO after server starts
+function initializeSocketIO(httpServer) {
+  console.log("🔌 Initializing Socket.IO server...");
+  console.log("🔌 HTTP Server instance:", !!httpServer);
+  console.log("🔌 HTTP Server listening:", httpServer.listening);
+  console.log("🔌 Socket CORS function:", !!socketCorsFunction);
 
-console.log("🔌 Socket.IO server created:", !!io);
-// Skip version check for now in ES modules
+  try {
+    // Create Socket.IO server with the listening HTTP server
+    io = new Server(httpServer, {
+      cors: {
+        origin: socketCorsFunction,
+        credentials: true,
+        methods: ["GET", "POST", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "User-Agent", "Origin", "Accept"]
+      },
+      // Basic transport configuration
+      transports: ['polling', 'websocket'],
+      // Basic timeout settings
+      pingTimeout: 60000,
+      pingInterval: 25000,
+      // Simplified settings for deployment
+      serveClient: false,
+      allowUpgrades: true,
+      // Enable all Engine.IO protocols
+      allowEIO3: true,
+      // Basic connection settings
+      connectTimeout: 45000
+    });
 
-// Test Socket.IO initialization
-try {
-  console.log("🔌 Socket.IO engine available:", !!io.engine);
-  console.log("🔌 Socket.IO sockets namespace:", !!io.sockets);
-  console.log("🔌 Socket.IO listening:", io.engine?.listening);
-} catch (error) {
-  console.error("❌ Socket.IO initialization error:", error);
+    console.log("✅ Socket.IO server created successfully:", !!io);
+    
+    // Test Socket.IO initialization
+    setTimeout(() => {
+      console.log("🔍 Socket.IO engine status:");
+      console.log("🔌 Socket.IO engine available:", !!io.engine);
+      console.log("🔌 Socket.IO sockets namespace:", !!io.sockets);
+      console.log("🔌 Socket.IO engine listening:", io.engine?.listening);
+      console.log("🔌 Socket.IO httpServer bound:", io.httpServer === httpServer);
+    }, 500);
+
+    return io;
+    
+  } catch (error) {
+    console.error("❌ Socket.IO initialization error:", error);
+    throw error;
+  }
 }
 
-// Make io instance available to the controllers
-app.set('io', io);
-app.set('onlineUsers', onlineUsers);
+// io and onlineUsers will be set after Socket.IO initialization
 
 console.log("🔧 CORS allowed origins:", allowedOrigins);
 console.log("🌍 NODE_ENV:", process.env.NODE_ENV);
@@ -259,143 +269,164 @@ app.use("/api/chat", chatRoutes);
 // Remove static file serving since frontend is on Vercel
 // Backend only serves API routes
 
-io.on('connection', (socket) => {
-  console.log('🔌 New socket connection:', socket.id);
-  console.log('🔌 Transport method:', socket.conn.transport.name);
-  console.log('🔌 User agent:', socket.handshake.headers['user-agent']);
-  console.log('🔌 Origin:', socket.handshake.headers.origin);
-  console.log('🔌 Referer:', socket.handshake.headers.referer);
-  
-  // Detect if it's an iOS device
-  const userAgent = socket.handshake.headers['user-agent'] || '';
-  const isIOS = /iPhone|iPad|iPod/.test(userAgent);
-  const isAndroid = /Android/.test(userAgent);
-  
-  console.log(`🔌 Device detected: ${isIOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop'}`);
-  
-  // Test handler to verify connection
-  socket.on('test', (data) => {
-    console.log('🧪 Test event received:', data, 'from socket:', socket.id);
-    console.log('🧪 Current transport:', socket.conn.transport.name);
-    console.log('🧪 Socket connected:', socket.connected);
-  });
-
-  // Add user to online users when they connect
-  socket.on('addUser', (userId) => {
-    console.log('👤 Adding user to online list:', userId, 'Socket ID:', socket.id);
-    onlineUsers.set(userId, socket.id);
-    console.log('👥 Current online users:', Array.from(onlineUsers.keys()));
-    io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
-  });
-  
-  // Handle sending messages
-  socket.on('sendMessage', async ({ senderId, receiverId, content }) => {
-    const receiverSocketId = onlineUsers.get(receiverId);
-    
-    try {
-      // Get sender info for better notifications
-      const User = (await import('./models/User.js')).default;
-      const sender = await User.findById(senderId).select('fullName');
-      const senderName = sender ? sender.fullName : 'Someone';
-      
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit('getMessage', {
-          senderId,
-          senderName,
-          content,
-          timestamp: new Date().toISOString()
-        });
-
-      }
-    } catch (error) {
-      console.error('Error in sendMessage socket handler:', error);
-    }
-  });
-  
-  // Handle typing indicators
-  socket.on('typing', ({ senderId, receiverId }) => {
-    const receiverSocketId = onlineUsers.get(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit('typing', { senderId });
-    }
-  });
-  
-  socket.on('stopTyping', ({ senderId, receiverId }) => {
-    const receiverSocketId = onlineUsers.get(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit('stopTyping');
-    }
-  });
-  
-  // Handle disconnection
-  socket.on('disconnect', () => {
-    console.log('🔌 Socket disconnected:', socket.id);
-    // Remove user from online users
-    for (const [userId, socketId] of onlineUsers.entries()) {
-      if (socketId === socket.id) {
-        console.log('👤 Removing user from online list:', userId);
-        onlineUsers.delete(userId);
-        console.log('👥 Remaining online users:', Array.from(onlineUsers.keys()));
-        io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
-        break;
-      }
-    }
-  });
-  
-  // Handle video call signaling
-  socket.on('callUser', ({ userToCall, signalData, from, name }) => {
-    console.log(`📞 Call request: ${name} (${from}) calling ${userToCall}`);
-    const receiverSocketId = onlineUsers.get(userToCall);
-    console.log(`📞 Receiver socket ID: ${receiverSocketId}`);
-    console.log(`📞 Online users:`, Array.from(onlineUsers.keys()));
-    
-    if (receiverSocketId) {
-      console.log(`📞 Forwarding call to ${userToCall}`);
-      io.to(receiverSocketId).emit('callUser', {
-        signal: signalData,
-        from,
-        name
-      });
-    } else {
-      console.log(`📞 User ${userToCall} is not online`);
-    }
-  });
-
-  socket.on('answerCall', (data) => {
-    console.log(`📞 Call answered by user, sending to: ${data.to}`);
-    const callerSocketId = onlineUsers.get(data.to);
-    if (callerSocketId) {
-      console.log(`📞 Forwarding answer to caller`);
-      io.to(callerSocketId).emit('callAccepted', data.signal);
-    } else {
-      console.log(`📞 Caller ${data.to} is no longer online`);
-    }
-  });
-
-  socket.on('endCall', ({ userId }) => {
-    const receiverSocketId = onlineUsers.get(userId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit('callEnded');
-    }
-  });
-});
+// Socket.IO event handlers will be set up after initialization
 
 connectDB()
   .then(() => {
-    // Use 'server' instead of 'app' to listen
-    server.listen(PORT, () => {
-      console.log(`✅ Server is running on port ${PORT}`);
-      console.log(`✅ Socket.IO is ready for connections`);
+    // Start the HTTP server first
+    const httpServer = server.listen(PORT, () => {
+      console.log(`✅ HTTP Server is running on port ${PORT}`);
       
-      // Additional verification after server starts
-      setTimeout(() => {
-        console.log("🔍 Post-startup Socket.IO check:");
-        console.log("🔌 Server listening:", server.listening);
-        console.log("🔌 Socket.IO engine ready:", !!io.engine);
-        console.log("🔌 Socket.IO engine listening:", io.engine?.listening);
-        console.log("🔌 Online users map initialized:", !!onlineUsers);
-      }, 1000);
+      try {
+        // Initialize Socket.IO AFTER server is listening
+        io = initializeSocketIO(httpServer);
+        
+        // Make io instance available to the controllers after initialization
+        app.set('io', io);
+        app.set('onlineUsers', onlineUsers);
+        
+        // Set up Socket.IO event handlers after initialization
+        io.on('connection', (socket) => {
+          console.log('🔌 New socket connection:', socket.id);
+          console.log('🔌 Transport method:', socket.conn.transport.name);
+          console.log('🔌 User agent:', socket.handshake.headers['user-agent']);
+          console.log('🔌 Origin:', socket.handshake.headers.origin);
+          console.log('🔌 Referer:', socket.handshake.headers.referer);
+          
+          // Detect if it's an iOS device
+          const userAgent = socket.handshake.headers['user-agent'] || '';
+          const isIOS = /iPhone|iPad|iPod/.test(userAgent);
+          const isAndroid = /Android/.test(userAgent);
+          
+          console.log(`🔌 Device detected: ${isIOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop'}`);
+          
+          // Test handler to verify connection
+          socket.on('test', (data) => {
+            console.log('🧪 Test event received:', data, 'from socket:', socket.id);
+            console.log('🧪 Current transport:', socket.conn.transport.name);
+            console.log('🧪 Socket connected:', socket.connected);
+          });
+
+          // Add user to online users when they connect
+          socket.on('addUser', (userId) => {
+            console.log('👤 Adding user to online list:', userId, 'Socket ID:', socket.id);
+            onlineUsers.set(userId, socket.id);
+            console.log('👥 Current online users:', Array.from(onlineUsers.keys()));
+            io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
+          });
+          
+          // Handle sending messages
+          socket.on('sendMessage', async ({ senderId, receiverId, content }) => {
+            const receiverSocketId = onlineUsers.get(receiverId);
+            
+            try {
+              // Get sender info for better notifications
+              const User = (await import('./models/User.js')).default;
+              const sender = await User.findById(senderId).select('fullName');
+              const senderName = sender ? sender.fullName : 'Someone';
+              
+              if (receiverSocketId) {
+                io.to(receiverSocketId).emit('getMessage', {
+                  senderId,
+                  senderName,
+                  content,
+                  timestamp: new Date().toISOString()
+                });
+              }
+            } catch (error) {
+              console.error('Error in sendMessage socket handler:', error);
+            }
+          });
+          
+          // Handle typing indicators
+          socket.on('typing', ({ senderId, receiverId }) => {
+            const receiverSocketId = onlineUsers.get(receiverId);
+            if (receiverSocketId) {
+              io.to(receiverSocketId).emit('typing', { senderId });
+            }
+          });
+          
+          socket.on('stopTyping', ({ senderId, receiverId }) => {
+            const receiverSocketId = onlineUsers.get(receiverId);
+            if (receiverSocketId) {
+              io.to(receiverSocketId).emit('stopTyping');
+            }
+          });
+          
+          // Handle disconnection
+          socket.on('disconnect', () => {
+            console.log('🔌 Socket disconnected:', socket.id);
+            // Remove user from online users
+            for (const [userId, socketId] of onlineUsers.entries()) {
+              if (socketId === socket.id) {
+                console.log('👤 Removing user from online list:', userId);
+                onlineUsers.delete(userId);
+                console.log('👥 Remaining online users:', Array.from(onlineUsers.keys()));
+                io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
+                break;
+              }
+            }
+          });
+          
+          // Handle video call signaling
+          socket.on('callUser', ({ userToCall, signalData, from, name }) => {
+            console.log(`📞 Call request: ${name} (${from}) calling ${userToCall}`);
+            const receiverSocketId = onlineUsers.get(userToCall);
+            console.log(`📞 Receiver socket ID: ${receiverSocketId}`);
+            console.log(`📞 Online users:`, Array.from(onlineUsers.keys()));
+            
+            if (receiverSocketId) {
+              console.log(`📞 Forwarding call to ${userToCall}`);
+              io.to(receiverSocketId).emit('callUser', {
+                signal: signalData,
+                from,
+                name
+              });
+            } else {
+              console.log(`📞 User ${userToCall} is not online`);
+            }
+          });
+
+          socket.on('answerCall', (data) => {
+            console.log(`📞 Call answered by user, sending to: ${data.to}`);
+            const callerSocketId = onlineUsers.get(data.to);
+            if (callerSocketId) {
+              console.log(`📞 Forwarding answer to caller`);
+              io.to(callerSocketId).emit('callAccepted', data.signal);
+            } else {
+              console.log(`📞 Caller ${data.to} is no longer online`);
+            }
+          });
+
+          socket.on('endCall', ({ userId }) => {
+            const receiverSocketId = onlineUsers.get(userId);
+            if (receiverSocketId) {
+              io.to(receiverSocketId).emit('callEnded');
+            }
+          });
+        });
+        
+        console.log(`✅ Socket.IO is ready for connections`);
+        
+        // Verification after everything is set up
+        setTimeout(() => {
+          console.log("🔍 Final verification:");
+          console.log("🔌 HTTP Server listening:", httpServer.listening);
+          console.log("🔌 Socket.IO instance ready:", !!io);
+          console.log("🔌 Socket.IO engine ready:", !!io?.engine);
+          console.log("🔌 Socket.IO engine listening:", io?.engine?.listening);
+          console.log("🔌 Socket.IO bound to server:", io?.httpServer === httpServer);
+          console.log("🔌 Online users map initialized:", !!onlineUsers);
+        }, 1000);
+        
+      } catch (socketError) {
+        console.error("❌ Socket.IO setup error:", socketError);
+        // Server will still work for HTTP requests
+      }
     });
+    
+    // Store server reference for debugging
+    global.httpServer = httpServer;
   })
   .catch((error) => {
     console.error("❌ Failed to connect to MongoDB:", error);
