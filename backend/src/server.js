@@ -82,6 +82,10 @@ const socketCorsFunction = (origin, callback) => {
 };
 
 // Initialize Socket.IO with enhanced mobile support and debugging
+console.log("🔌 Initializing Socket.IO server...");
+console.log("🔌 Server instance:", !!server);
+console.log("🔌 Socket CORS function:", !!socketCorsFunction);
+
 const io = new Server(server, {
   cors: {
     origin: socketCorsFunction,
@@ -106,6 +110,9 @@ const io = new Server(server, {
   // Allow upgrade from polling to websocket
   allowUpgrades: true
 });
+
+console.log("🔌 Socket.IO server initialized:", !!io);
+console.log("🔌 Socket.IO engine:", !!io.engine);
 
 // Make io instance available to the controllers
 app.set('io', io);
@@ -193,13 +200,23 @@ app.get("/health", (req, res) => {
 
 // Socket.io health check endpoint
 app.get("/socket.io/health", (req, res) => {
-  res.json({ 
-    status: "ok",
-    transports: ['polling', 'websocket'],
-    cors: "configured",
-    timestamp: new Date().toISOString(),
-    onlineUsers: Array.from(onlineUsers.keys()).length
-  });
+  try {
+    res.json({ 
+      status: "ok",
+      transports: ['polling', 'websocket'],
+      cors: "configured",
+      timestamp: new Date().toISOString(),
+      onlineUsers: Array.from(onlineUsers.keys()).length,
+      socketServer: io ? "initialized" : "not initialized",
+      port: PORT
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Routes
