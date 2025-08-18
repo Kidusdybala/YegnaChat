@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "lucide": "^0.536.0",
-    "react-router": "^7.7.1"
+    "react-router": "^7.7.1",
+    "simple-peer": "^9.11.1"
   }
 }
