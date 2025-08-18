@@ -48,24 +48,28 @@ export const SocketContextProvider = ({ children }) => {
       
       const socketConfig = {
         query: { userId: authUser._id },
-        // Force polling first for iOS, allow both for others
-        transports: isIOS ? ['polling'] : ['polling', 'websocket'],
-        // Increase timeout for mobile networks
-        timeout: isIOS ? 30000 : 20000,
-        // Enable polling for better iOS compatibility
+        // Force WebSocket-only to bypass Leapcell proxy polling issues
+        transports: ['websocket'],
+        // Timeout settings optimized for proxy environments
+        timeout: 20000,
+        // Enable new connections to avoid session issues
         forceNew: true,
-        // Reconnection settings - more aggressive for iOS
+        // Aggressive reconnection settings
         reconnection: true,
-        reconnectionAttempts: isIOS ? 10 : 5,
-        reconnectionDelay: isIOS ? 2000 : 1000,
-        reconnectionDelayMax: isIOS ? 10000 : 5000,
-        // Remove unsafe headers - browser automatically sends User-Agent
-        // extraHeaders removed to prevent "unsafe header" errors
-        // iOS-specific settings
+        reconnectionAttempts: 8,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        // WebSocket-only, no upgrade needed
+        upgrade: false,
+        rememberUpgrade: false,
+        // Disable features that might cause proxy issues
+        jsonp: false,
+        // Add explicit path
+        path: '/socket.io/',
+        // iOS-specific settings (if needed)
         ...(isIOS && {
-          upgrade: false, // Disable websocket upgrade for iOS
-          rememberUpgrade: false,
-          jsonp: false
+          // Even on iOS, allow upgrade since polling is problematic
+          forceJSONP: false
         })
       };
       
@@ -75,15 +79,16 @@ export const SocketContextProvider = ({ children }) => {
 
       setSocket(newSocket);
 
-      // Enhanced connection event with detailed logging
+      // Enhanced connection event with WebSocket debugging
       newSocket.on("connect", () => {
         console.log("🔌 Socket connected successfully");
         console.log("🔌 Socket ID:", newSocket.id);
         console.log("🔌 Transport:", newSocket.io.engine.transport.name);
         console.log("🔌 Ready state:", newSocket.io.engine.readyState);
+        console.log("🚀 WebSocket-only connection established!");
         
-        setDebugInfo(`✅ Socket connected: ${newSocket.id}`);
-        toast.success("🔌 Socket connected!");
+        setDebugInfo(`✅ WebSocket connected: ${newSocket.id}`);
+        toast.success("🚀 WebSocket connected!");
         
         // Now that we're connected, add the user
         console.log("🔌 Adding user to socket:", authUser._id, authUser.fullName);

@@ -100,18 +100,23 @@ function initializeSocketIO(httpServer) {
         methods: ["GET", "POST", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization", "User-Agent", "Origin", "Accept"]
       },
-      // Basic transport configuration
-      transports: ['polling', 'websocket'],
-      // Basic timeout settings
-      pingTimeout: 60000,
-      pingInterval: 25000,
+      // Force WebSocket-only to bypass Leapcell proxy polling issues
+      transports: ['websocket'],
+      // Remove polling completely - Leapcell doesn't handle Socket.IO sessions
+      allowUpgrades: false, // No need to upgrade, start with WebSocket
+      // Session and connection persistence
+      cookie: false, // Disable cookies that might cause session issues
+      // Basic timeout settings - shorter for better reconnection
+      pingTimeout: 30000,
+      pingInterval: 15000,
       // Simplified settings for deployment
       serveClient: false,
-      allowUpgrades: true,
       // Enable all Engine.IO protocols
       allowEIO3: true,
-      // Basic connection settings
-      connectTimeout: 45000
+      // Connection settings optimized for proxy environments
+      connectTimeout: 30000,
+      // Add path explicitly to avoid conflicts
+      path: '/socket.io/'
     });
 
     console.log("✅ Socket.IO server created successfully:", !!io);
