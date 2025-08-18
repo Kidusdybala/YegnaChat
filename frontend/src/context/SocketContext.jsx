@@ -59,10 +59,8 @@ export const SocketContextProvider = ({ children }) => {
         reconnectionAttempts: isIOS ? 10 : 5,
         reconnectionDelay: isIOS ? 2000 : 1000,
         reconnectionDelayMax: isIOS ? 10000 : 5000,
-        // Add headers for better compatibility
-        extraHeaders: {
-          "User-Agent": navigator.userAgent
-        },
+        // Remove unsafe headers - browser automatically sends User-Agent
+        // extraHeaders removed to prevent "unsafe header" errors
         // iOS-specific settings
         ...(isIOS && {
           upgrade: false, // Disable websocket upgrade for iOS
