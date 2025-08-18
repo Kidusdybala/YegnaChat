@@ -48,10 +48,10 @@ export const SocketContextProvider = ({ children }) => {
       
       const socketConfig = {
         query: { userId: authUser._id },
-        // Force WebSocket-only to bypass Leapcell proxy polling issues
-        transports: ['websocket'],
-        // Timeout settings optimized for proxy environments
-        timeout: 20000,
+        // Start with polling, allow WebSocket upgrade if stable
+        transports: ['polling', 'websocket'],
+        // Much longer timeout for proxy environments
+        timeout: 60000,
         // Enable new connections to avoid session issues
         forceNew: true,
         // Aggressive reconnection settings
@@ -59,9 +59,9 @@ export const SocketContextProvider = ({ children }) => {
         reconnectionAttempts: 8,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
-        // WebSocket-only, no upgrade needed
-        upgrade: false,
-        rememberUpgrade: false,
+        // Allow WebSocket upgrade but don't force it
+        upgrade: true,
+        rememberUpgrade: false, // Don't remember to avoid session issues
         // Disable features that might cause proxy issues
         jsonp: false,
         // Add explicit path
@@ -79,16 +79,16 @@ export const SocketContextProvider = ({ children }) => {
 
       setSocket(newSocket);
 
-      // Enhanced connection event with WebSocket debugging
+      // Enhanced connection event with transport debugging
       newSocket.on("connect", () => {
         console.log("🔌 Socket connected successfully");
         console.log("🔌 Socket ID:", newSocket.id);
         console.log("🔌 Transport:", newSocket.io.engine.transport.name);
         console.log("🔌 Ready state:", newSocket.io.engine.readyState);
-        console.log("🚀 WebSocket-only connection established!");
+        console.log("🔌 Engine.IO version:", newSocket.io.engine.protocol);
         
-        setDebugInfo(`✅ WebSocket connected: ${newSocket.id}`);
-        toast.success("🚀 WebSocket connected!");
+        setDebugInfo(`✅ Socket connected (${newSocket.io.engine.transport.name}): ${newSocket.id}`);
+        toast.success(`🔌 Socket connected via ${newSocket.io.engine.transport.name}!`);
         
         // Now that we're connected, add the user
         console.log("🔌 Adding user to socket:", authUser._id, authUser.fullName);
