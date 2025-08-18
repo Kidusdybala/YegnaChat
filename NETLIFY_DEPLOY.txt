@@ -1,6 +1,7 @@
-FORCE_NETLIFY_DEPLOY_v5
-timestamp: 2025-01-18T18:10:00Z
+FORCE_NETLIFY_DEPLOY_v6
+timestamp: 2025-01-18T18:25:00Z  
 backend migrated to new leapcell account
 new backend URL: https://egnahat-buddykk7781-6o6zpy2c.leapcell.dev/api
-socket debugging fixes applied
-force complete redeploy to fix mobile connection issues
+socket initialization fixed in backend
+force frontend redeploy with cache bust
+mobile socket connection should now work properly
