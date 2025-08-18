@@ -116,13 +116,25 @@ function initializeSocketIO(httpServer) {
 
     console.log("✅ Socket.IO server created successfully:", !!io);
     
-    // Test Socket.IO initialization
+    // Test Socket.IO initialization and engine setup
     setTimeout(() => {
       console.log("🔍 Socket.IO engine status:");
       console.log("🔌 Socket.IO engine available:", !!io.engine);
       console.log("🔌 Socket.IO sockets namespace:", !!io.sockets);
       console.log("🔌 Socket.IO engine listening:", io.engine?.listening);
       console.log("🔌 Socket.IO httpServer bound:", io.httpServer === httpServer);
+      
+      // Check if Socket.IO engine is properly handling routes
+      if (io.engine) {
+        console.log("🔍 Socket.IO engine details:");
+        console.log("🔌 Engine transport:", io.engine.transport?.name);
+        console.log("🔌 Engine readyState:", io.engine.readyState);
+        console.log("🔌 Engine server attached:", !!io.engine.httpServer);
+      }
+      
+      // Test if Socket.IO path is working
+      console.log("🔍 Testing Socket.IO internal paths...");
+      
     }, 500);
 
     return io;
@@ -215,8 +227,8 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Socket.io health check endpoint
-app.get("/socket.io/health", (req, res) => {
+// Socket.IO health check endpoint - moved to avoid conflict with Socket.IO paths
+app.get("/api/socket-health", (req, res) => {
   try {
     const socketStatus = {
       status: "ok",
@@ -234,6 +246,8 @@ app.get("/socket.io/health", (req, res) => {
     if (io) {
       socketStatus.socketEngine = io.engine ? "available" : "not available";
       socketStatus.socketListeners = Object.keys(io._events || {});
+      socketStatus.engineListening = io.engine ? io.engine.listening : "no engine";
+      socketStatus.serverAttached = !!io.httpServer;
     }
     
     console.log("🔍 Socket health check requested:", socketStatus);
@@ -249,7 +263,7 @@ app.get("/socket.io/health", (req, res) => {
 });
 
 // Alternative debug endpoint that bypasses Socket.IO completely
-app.get("/debug/socket", (req, res) => {
+app.get("/api/debug-socket", (req, res) => {
   res.json({
     status: "debug-ok",
     message: "Direct endpoint working",
@@ -257,7 +271,9 @@ app.get("/debug/socket", (req, res) => {
     socketInitialized: !!io,
     onlineUsersCount: onlineUsers.size,
     port: PORT,
-    env: process.env.NODE_ENV
+    env: process.env.NODE_ENV,
+    socketEngineReady: !!io?.engine,
+    socketEngineListening: io?.engine?.listening
   });
 });
 
