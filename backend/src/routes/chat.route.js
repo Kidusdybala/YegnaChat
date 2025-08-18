@@ -13,28 +13,23 @@ import {
   markMessagesAsRead
 } from "../controllers/chat.controller.js";
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 import Chat from "../models/Chat.js";
 
-// Get directory name for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "../../uploads"));
+// Configure multer for file uploads (memory storage for Cloudinary)
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, uniqueSuffix + ext);
+  fileFilter: (req, file, cb) => {
+    // Allow images and videos
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image and video files are allowed'), false);
+    }
   }
 });
-
-const upload = multer({ storage: storage });
 
 const router = express.Router();
 

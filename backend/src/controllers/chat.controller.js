@@ -2,21 +2,7 @@ import { generateStreamToken, upsertStreamUser } from "../lib/stream.js";
 import User from "../models/User.js";
 import Chat from "../models/Chat.js";
 import Message from "../models/Message.js";
-import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import fs from "fs";
-
-// Get directory name for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, "../../uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+import { uploadToCloudinary } from "../lib/cloudinary.js";
 
 export async function getStreamToken(req, res) {
   try {
@@ -95,25 +81,59 @@ export async function createOrGetStreamChat(req, res) {
 // Upload file for Stream chat
 export async function uploadMedia(req, res) {
   try {
+    console.log('📤 Upload request received');
+    
     const file = req.file;
     if (!file) {
+      console.log('❌ No file in request');
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Return the file URL
-    const fileUrl = `/uploads/${file.filename}`;
-    res.status(200).json({ fileUrl });
+    console.log('📁 File details:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size
+    });
+
+    // Check if Cloudinary is configured
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.log('❌ Cloudinary not configured');
+      return res.status(500).json({ 
+        message: "Image upload service not configured",
+        error: "Missing Cloudinary credentials"
+      });
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const fileName = `${timestamp}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+
+    console.log('☁️ Uploading to Cloudinary...');
+    
+    // Upload to Cloudinary
+    const result = await uploadToCloudinary(file.buffer, fileName, 'yegnachat/messages');
+    
+    console.log('✅ Upload successful:', result.secure_url);
+    
+    // Return the Cloudinary URL
+    res.status(200).json({ 
+      fileUrl: result.secure_url,
+      publicId: result.public_id,
+      originalName: file.originalname
+    });
+    
   } catch (error) {
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error('❌ Upload error:', error);
+    res.status(500).json({ 
+      message: "Failed to upload image",
+      error: error.message 
+    });
   }
 }
-
-// Simple chat functions (fallback when Stream is not available)
 export async function createOrGetChat(req, res) {
   try {
     const { userId } = req.body;
     const currentUserId = req.user.id;
-
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
@@ -135,11 +155,10 @@ export async function createOrGetChat(req, res) {
     if (existingChats.length > 0) {
       // Use the most recent chat
       chat = existingChats[0];
-      
-      // If there are duplicates, clean them up
+ 
       if (existingChats.length > 1) {
         
-        // Keep the first (most recent) chat and delete the rest
+  
         const chatsToDelete = existingChats.slice(1).map(c => c._id);
         
         // Delete the duplicate chats
@@ -160,7 +179,6 @@ export async function createOrGetChat(req, res) {
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
-
 export async function getChatMessages(req, res) {
   try {
     const { chatId } = req.params;
