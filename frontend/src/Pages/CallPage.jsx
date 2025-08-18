@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Users } from 'lucide-react';
+import { Phone, PhoneOff, Video, Users } from 'lucide-react';
 import VideoCall from '../components/VideoCall';
 import useAuthUser from '../hooks/useAuthUser';
 import { userAPI } from '../lib/api';
@@ -19,6 +19,7 @@ const CallPage = () => {
 
   // Get target user ID from URL params
   const targetUserId = searchParams.get('userId');
+  const autoAnswer = searchParams.get('autoAnswer') === 'true';
 
   // Fetch target user data
   useEffect(() => {
@@ -45,12 +46,12 @@ const CallPage = () => {
     fetchTargetUser();
   }, [targetUserId, navigate]);
 
-  // Auto-start video call if there's an incoming call for this user
+  // Auto-start video call if there's an incoming call for this user or autoAnswer is true
   useEffect(() => {
-    if (incomingCall && incomingCall.from === targetUserId) {
+    if (targetUser && (autoAnswer || (incomingCall && incomingCall.from === targetUserId))) {
       setShowVideoCall(true);
     }
-  }, [incomingCall, targetUserId]);
+  }, [incomingCall, targetUserId, autoAnswer, targetUser]);
 
   const handleStartCall = () => {
     if (!targetUser) {
@@ -84,6 +85,7 @@ const CallPage = () => {
     if (socket) {
       socket.emit('endCall', { userId: incomingCall.from });
     }
+    navigate('/chat');
   };
 
   if (loading) {
@@ -116,16 +118,16 @@ const CallPage = () => {
 
   // Show video call component if call is active
   if (showVideoCall) {
-    return <VideoCall targetUser={targetUser} onEndCall={handleEndCall} />;
+    return <VideoCall targetUser={targetUser} onEndCall={handleEndCall} autoCall={!autoAnswer} />;
   }
 
   // Show incoming call notification
-  if (incomingCall) {
+  if (incomingCall && incomingCall.from === targetUserId) {
     return (
       <div className="min-h-screen bg-base-100 flex items-center justify-center">
         <div className="bg-base-200 p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4">
           <div className="mb-6">
-            <div className="w-24 h-24 rounded-full bg-primary text-primary-content flex items-center justify-center mx-auto mb-4 text-3xl font-bold">
+            <div className="w-24 h-24 rounded-full bg-primary text-primary-content flex items-center justify-center mx-auto mb-4 text-3xl font-bold animate-pulse">
               {incomingCall.name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
             <h2 className="text-2xl font-bold text-base-content mb-2">
@@ -191,7 +193,7 @@ const CallPage = () => {
             {targetUser.fullName}
           </h2>
           <div className="flex items-center justify-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${isTargetOnline ? 'bg-success' : 'bg-base-300'}`}></div>
+            <div className={`w-3 h-3 rounded-full ${isTargetOnline ? 'bg-success animate-pulse' : 'bg-base-300'}`}></div>
             <p className="text-sm sm:text-base text-base-content opacity-70">
               {isTargetOnline ? 'Online' : 'Offline'}
             </p>

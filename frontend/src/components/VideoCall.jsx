@@ -26,7 +26,18 @@ const VideoCall = ({ targetUser, onEndCall, autoCall = false }) => {
     const getMediaStream = async () => {
       try {
         // Try video + audio first
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: 'user'
+          }, 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
         currentStream = mediaStream;
         setStream(mediaStream);
         if (myVideo.current) {
@@ -120,6 +131,11 @@ const VideoCall = ({ targetUser, onEndCall, autoCall = false }) => {
       }
     });
 
+    peer.on('error', (err) => {
+      console.error('Peer connection error:', err);
+      toast.error('Connection error occurred');
+    });
+
     peer.signal(call.signal);
     setPeer(peer);
   };
@@ -132,8 +148,6 @@ const VideoCall = ({ targetUser, onEndCall, autoCall = false }) => {
     }
     
     console.log('📞 Initiating call to:', targetUser.fullName, 'ID:', targetUser._id);
-    console.log('📞 Socket connected:', socket?.connected);
-    console.log('📞 From user:', authUser.fullName, 'ID:', authUser._id);
     
     const peer = createPeer({ initiator: true, trickle: false, stream });
 
@@ -152,6 +166,11 @@ const VideoCall = ({ targetUser, onEndCall, autoCall = false }) => {
       if (userVideo.current) {
         userVideo.current.srcObject = remoteStream;
       }
+    });
+
+    peer.on('error', (err) => {
+      console.error('Peer connection error:', err);
+      toast.error('Connection error occurred');
     });
 
     // Remove any existing 'callAccepted' listeners to prevent duplicates
@@ -226,67 +245,87 @@ const VideoCall = ({ targetUser, onEndCall, autoCall = false }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-base-100 p-6 rounded-lg w-full max-w-4xl shadow-2xl border border-base-300">
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="relative">
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+      <div className="bg-base-100 p-4 sm:p-6 rounded-lg w-full max-w-6xl h-full max-h-[90vh] shadow-2xl border border-base-300 flex flex-col">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-base-content">
+            {callAccepted ? `In call with ${targetUser.fullName}` : 'Video Call'}
+          </h2>
+          <div className="flex items-center gap-2">
+            <div className={`w-3 h-3 rounded-full ${callAccepted ? 'bg-success animate-pulse' : 'bg-warning'}`}></div>
+            <span className="text-sm text-base-content opacity-70">
+              {callAccepted ? 'Connected' : call?.isReceivingCall ? 'Incoming call...' : 'Connecting...'}
+            </span>
+          </div>
+        </div>
+
+        {/* Video Grid */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          {/* My Video */}
+          <div className="relative bg-base-200 rounded-lg overflow-hidden">
             <video
               playsInline
               muted
               ref={myVideo}
               autoPlay
-              className="w-full rounded-lg shadow-md bg-base-200"
-              style={{ display: stream?.getVideoTracks()?.length > 0 ? 'block' : 'none' }}
+              className="w-full h-full object-cover"
+              style={{ display: stream?.getVideoTracks()?.length > 0 && !isVideoOff ? 'block' : 'none' }}
             />
             {/* Show placeholder when no video */}
-            {(!stream || stream.getVideoTracks()?.length === 0) && (
-              <div className="w-full h-48 rounded-lg shadow-md bg-base-200 flex items-center justify-center">
+            {(!stream || stream.getVideoTracks()?.length === 0 || isVideoOff) && (
+              <div className="w-full h-full flex items-center justify-center min-h-[200px]">
                 <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary text-primary-content flex items-center justify-center mx-auto mb-2 text-2xl font-bold">
+                  <div className="w-20 h-20 rounded-full bg-primary text-primary-content flex items-center justify-center mx-auto mb-3 text-3xl font-bold">
                     {authUser?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
-                  <p className="text-sm text-base-content opacity-70">Audio Only</p>
+                  <p className="text-sm text-base-content opacity-70">
+                    {isVideoOff ? 'Camera Off' : 'Audio Only'}
+                  </p>
                 </div>
               </div>
             )}
-            <span className="absolute bottom-2 left-2 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-medium">
-              You {(!stream || stream.getVideoTracks()?.length === 0) && '(Audio Only)'}
-            </span>
+            <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-medium">
+              You {(!stream || stream.getVideoTracks()?.length === 0 || isVideoOff) && '(Audio Only)'}
+            </div>
           </div>
-          {callAccepted ? (
-            <div className="relative">
-              <video
-                playsInline
-                ref={userVideo}
-                autoPlay
-                className="w-full rounded-lg shadow-md bg-base-200"
-              />
-              <span className="absolute bottom-2 left-2 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-medium">
-                {targetUser.fullName}
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center bg-base-200 rounded-lg">
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-primary text-primary-content flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl font-bold">
-                    {targetUser.fullName?.charAt(0)?.toUpperCase()}
-                  </span>
+
+          {/* Remote Video */}
+          <div className="relative bg-base-200 rounded-lg overflow-hidden">
+            {callAccepted ? (
+              <>
+                <video
+                  playsInline
+                  ref={userVideo}
+                  autoPlay
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1 rounded-md text-sm font-medium">
+                  {targetUser.fullName}
                 </div>
-                <p className="text-base-content font-medium">{targetUser.fullName}</p>
-                <p className="text-base-content opacity-60 text-sm">
-                  {call?.isReceivingCall ? 'Incoming call...' : 'Waiting to connect...'}
-                </p>
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center min-h-[200px]">
+                <div className="text-center">
+                  <div className="w-20 h-20 rounded-full bg-primary text-primary-content flex items-center justify-center mx-auto mb-3 text-3xl font-bold">
+                    {targetUser.fullName?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <p className="text-base-content font-medium text-lg">{targetUser.fullName}</p>
+                  <p className="text-base-content opacity-60 text-sm mt-1">
+                    {call?.isReceivingCall ? 'Incoming call...' : 'Waiting to connect...'}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
         
-        <div className="flex justify-center gap-4">
+        {/* Call Controls */}
+        <div className="flex justify-center items-center gap-4">
           {!callAccepted && !call && (
             <button
               onClick={callUser}
-              className="btn btn-primary px-8 py-3 rounded-lg font-medium"
+              className="btn btn-success btn-lg px-8 rounded-full font-medium"
               disabled={!stream}
             >
               📹 Call {targetUser.fullName}
@@ -296,15 +335,15 @@ const VideoCall = ({ targetUser, onEndCall, autoCall = false }) => {
           {call?.isReceivingCall && !callAccepted && (
             <button
               onClick={answerCall}
-              className="btn btn-success px-8 py-3 rounded-lg font-medium"
+              className="btn btn-success btn-lg px-8 rounded-full font-medium animate-pulse"
             >
-              📞 Answer Call from {call.name}
+              📞 Answer Call
             </button>
           )}
           
           {/* Call Controls - Show when call is active */}
           {(callAccepted || call) && (
-            <div className="flex justify-center gap-3">
+            <>
               {/* Mute/Unmute Button */}
               <button
                 onClick={toggleMute}
@@ -326,27 +365,17 @@ const VideoCall = ({ targetUser, onEndCall, autoCall = false }) => {
               >
                 {isVideoOff ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
               </button>
-
-              {/* End Call Button */}
-              <button
-                onClick={endCall}
-                className="btn btn-circle btn-lg bg-error hover:bg-error-focus text-error-content"
-                title="End call"
-              >
-                <PhoneOff className="w-6 h-6" />
-              </button>
-            </div>
+            </>
           )}
 
-          {/* End Call Button for non-active states */}
-          {stream && !callAccepted && !call && (
-            <button
-              onClick={endCall}
-              className="btn btn-error px-8 py-3 rounded-lg font-medium"
-            >
-              📵 Cancel
-            </button>
-          )}
+          {/* End Call Button */}
+          <button
+            onClick={endCall}
+            className="btn btn-circle btn-lg bg-error hover:bg-error-focus text-error-content"
+            title="End call"
+          >
+            <PhoneOff className="w-6 h-6" />
+          </button>
         </div>
       </div>
     </div>

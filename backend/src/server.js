@@ -6,6 +6,7 @@ import { connectDB } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user.route.js";
 import chatRoutes from "./routes/chat.route.js";
+import newsRoutes from "./routes/newsRoutes.js";
 // Add this import at the top with your other imports
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
@@ -54,18 +55,14 @@ const allowedOrigins = [
 
 // Socket.io CORS function - same as Express CORS
 const socketCorsFunction = (origin, callback) => {
-  console.log("🔌 Socket.io CORS check for origin:", origin);
-  
   // Allow requests with no origin (mobile apps, etc.)
   if (!origin) {
-    console.log("🔌 No origin, allowing connection");
     return callback(null, true);
   }
   
   // Check against string origins
   const stringOrigins = allowedOrigins.filter(o => typeof o === 'string');
   if (stringOrigins.includes(origin)) {
-    console.log("✅ Socket.io origin allowed (string match):", origin);
     return callback(null, true);
   }
   
@@ -73,11 +70,9 @@ const socketCorsFunction = (origin, callback) => {
   const regexOrigins = allowedOrigins.filter(o => o instanceof RegExp);
   const regexMatch = regexOrigins.some(regex => regex.test(origin));
   if (regexMatch) {
-    console.log("✅ Socket.io origin allowed (regex match):", origin);
     return callback(null, true);
   }
   
-  console.log("❌ Socket.io origin rejected:", origin);
   callback(null, false);
 };
 
@@ -86,11 +81,6 @@ let io = null;
 
 // Function to initialize Socket.IO after server starts
 function initializeSocketIO(httpServer) {
-  console.log("🔌 Initializing Socket.IO server...");
-  console.log("🔌 HTTP Server instance:", !!httpServer);
-  console.log("🔌 HTTP Server listening:", httpServer.listening);
-  console.log("🔌 Socket CORS function:", !!socketCorsFunction);
-
   try {
     // Create Socket.IO server with the listening HTTP server
     io = new Server(httpServer, {
@@ -128,55 +118,27 @@ function initializeSocketIO(httpServer) {
       allowEIO3: false
     });
 
-    console.log("✅ Socket.IO server created successfully:", !!io);
-    
-    // Test Socket.IO initialization and engine setup
-    setTimeout(() => {
-      console.log("🔍 Socket.IO engine status:");
-      console.log("🔌 Socket.IO engine available:", !!io.engine);
-      console.log("🔌 Socket.IO sockets namespace:", !!io.sockets);
-      console.log("🔌 Socket.IO engine listening:", io.engine?.listening);
-      console.log("🔌 Socket.IO httpServer bound:", io.httpServer === httpServer);
-      
-      // Check if Socket.IO engine is properly handling routes
-      if (io.engine) {
-        console.log("🔍 Socket.IO engine details:");
-        console.log("🔌 Engine transport:", io.engine.transport?.name);
-        console.log("🔌 Engine readyState:", io.engine.readyState);
-        console.log("🔌 Engine server attached:", !!io.engine.httpServer);
-      }
-      
-      // Test if Socket.IO path is working
-      console.log("🔍 Testing Socket.IO internal paths...");
-      
-    }, 500);
-
     return io;
     
   } catch (error) {
-    console.error("❌ Socket.IO initialization error:", error);
+    console.error("Socket.IO initialization error:", error);
     throw error;
   }
 }
 
 // io and onlineUsers will be set after Socket.IO initialization
 
-console.log("🔧 CORS allowed origins:", allowedOrigins);
-console.log("🌍 NODE_ENV:", process.env.NODE_ENV);
-console.log("🌐 FRONTEND_URL:", process.env.FRONTEND_URL);
+
 
 // Enhanced CORS configuration for both regular HTTP and Socket.io
 app.use(cors({
   origin: function (origin, callback) {
-    console.log("🌐 CORS check for origin:", origin);
-    
     // Allow requests with no origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
     
     // Check against string origins
     const stringOrigins = allowedOrigins.filter(o => typeof o === 'string');
     if (stringOrigins.includes(origin)) {
-      console.log("✅ Origin allowed (string match):", origin);
       return callback(null, true);
     }
     
@@ -184,11 +146,9 @@ app.use(cors({
     const regexOrigins = allowedOrigins.filter(o => o instanceof RegExp);
     const regexMatch = regexOrigins.some(regex => regex.test(origin));
     if (regexMatch) {
-      console.log("✅ Origin allowed (regex match):", origin);
       return callback(null, true);
     }
     
-    console.log("❌ Origin rejected:", origin);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -264,10 +224,10 @@ app.get("/api/socket-health", (req, res) => {
       socketStatus.serverAttached = !!io.httpServer;
     }
     
-    console.log("🔍 Socket health check requested:", socketStatus);
+
     res.json(socketStatus);
   } catch (error) {
-    console.error("❌ Socket health check error:", error);
+    console.error("Socket health check error:", error);
     res.status(500).json({
       status: "error",
       error: error.message,
@@ -295,6 +255,7 @@ app.get("/api/debug-socket", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/news", newsRoutes);
 
 // Remove static file serving since frontend is on Vercel
 // Backend only serves API routes
@@ -305,7 +266,7 @@ connectDB()
   .then(() => {
     // Start the HTTP server first
     const httpServer = server.listen(PORT, () => {
-      console.log(`✅ HTTP Server is running on port ${PORT}`);
+      console.log(`HTTP Server is running on port ${PORT}`);
       
       try {
         // Initialize Socket.IO AFTER server is listening
@@ -317,31 +278,9 @@ connectDB()
         
         // Set up Socket.IO event handlers after initialization
         io.on('connection', (socket) => {
-          console.log('🔌 New socket connection:', socket.id);
-          console.log('🔌 Transport method:', socket.conn.transport.name);
-          console.log('🔌 User agent:', socket.handshake.headers['user-agent']);
-          console.log('🔌 Origin:', socket.handshake.headers.origin);
-          console.log('🔌 Referer:', socket.handshake.headers.referer);
-          
-          // Detect if it's an iOS device
-          const userAgent = socket.handshake.headers['user-agent'] || '';
-          const isIOS = /iPhone|iPad|iPod/.test(userAgent);
-          const isAndroid = /Android/.test(userAgent);
-          
-          console.log(`🔌 Device detected: ${isIOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop'}`);
-          
-          // Test handler to verify connection
-          socket.on('test', (data) => {
-            console.log('🧪 Test event received:', data, 'from socket:', socket.id);
-            console.log('🧪 Current transport:', socket.conn.transport.name);
-            console.log('🧪 Socket connected:', socket.connected);
-          });
-
           // Add user to online users when they connect
           socket.on('addUser', (userId) => {
-            console.log('👤 Adding user to online list:', userId, 'Socket ID:', socket.id);
             onlineUsers.set(userId, socket.id);
-            console.log('👥 Current online users:', Array.from(onlineUsers.keys()));
             io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
           });
           
@@ -383,27 +322,10 @@ connectDB()
             }
           });
           
-          // Handle disconnection
-          socket.on('disconnect', () => {
-            console.log('🔌 Socket disconnected:', socket.id);
-            // Remove user from online users
-            for (const [userId, socketId] of onlineUsers.entries()) {
-              if (socketId === socket.id) {
-                console.log('👤 Removing user from online list:', userId);
-                onlineUsers.delete(userId);
-                console.log('👥 Remaining online users:', Array.from(onlineUsers.keys()));
-                io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
-                break;
-              }
-            }
-          });
-          
           // Handle video call signaling
           socket.on('callUser', ({ userToCall, signalData, from, name }) => {
             console.log(`📞 Call request: ${name} (${from}) calling ${userToCall}`);
             const receiverSocketId = onlineUsers.get(userToCall);
-            console.log(`📞 Receiver socket ID: ${receiverSocketId}`);
-            console.log(`📞 Online users:`, Array.from(onlineUsers.keys()));
             
             if (receiverSocketId) {
               console.log(`📞 Forwarding call to ${userToCall}`);
@@ -434,23 +356,22 @@ connectDB()
               io.to(receiverSocketId).emit('callEnded');
             }
           });
+
+          // Handle disconnection
+          socket.on('disconnect', () => {
+            // Remove user from online users
+            for (const [userId, socketId] of onlineUsers.entries()) {
+              if (socketId === socket.id) {
+                onlineUsers.delete(userId);
+                io.emit('getOnlineUsers', Array.from(onlineUsers.keys()));
+                break;
+              }
+            }
+          });
         });
         
-        console.log(`✅ Socket.IO is ready for connections`);
-        
-        // Verification after everything is set up
-        setTimeout(() => {
-          console.log("🔍 Final verification:");
-          console.log("🔌 HTTP Server listening:", httpServer.listening);
-          console.log("🔌 Socket.IO instance ready:", !!io);
-          console.log("🔌 Socket.IO engine ready:", !!io?.engine);
-          console.log("🔌 Socket.IO engine listening:", io?.engine?.listening);
-          console.log("🔌 Socket.IO bound to server:", io?.httpServer === httpServer);
-          console.log("🔌 Online users map initialized:", !!onlineUsers);
-        }, 1000);
-        
       } catch (socketError) {
-        console.error("❌ Socket.IO setup error:", socketError);
+        console.error("Socket.IO setup error:", socketError);
         // Server will still work for HTTP requests
       }
     });
@@ -459,6 +380,6 @@ connectDB()
     global.httpServer = httpServer;
   })
   .catch((error) => {
-    console.error("❌ Failed to connect to MongoDB:", error);
+    console.error("Failed to connect to MongoDB:", error);
     process.exit(1);
   });

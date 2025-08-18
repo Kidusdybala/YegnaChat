@@ -22,7 +22,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // Handle Node.js modules
+      // Handle Node.js modules for simple-peer
       events: 'events-browserify',
       util: 'util',
       stream: 'stream-browserify',

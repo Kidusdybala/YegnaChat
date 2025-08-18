@@ -1,11 +1,17 @@
-// News API service
-const NEWS_API_KEY = import.meta.env.VITE_NEWS_API_KEY;
-const BASE_URL = 'https://newsapi.org/v2';
+// News API service - now using backend proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
-const fetchNews = async (category, country = 'us', pageSize = 10) => {
+const fetchNews = async (category, country = 'us', pageSize = 20) => {
   try {
     const response = await fetch(
-      `${BASE_URL}/top-headlines?category=${category}&country=${country}&pageSize=${pageSize}&apiKey=${NEWS_API_KEY}`
+      `${API_BASE_URL}/news/${category}?country=${country}&pageSize=${pageSize}`,
+      {
+        method: 'GET',
+        credentials: 'include', // Include cookies for authentication if needed
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
     
     if (!response.ok) {
@@ -20,21 +26,38 @@ const fetchNews = async (category, country = 'us', pageSize = 10) => {
   }
 };
 
+const fetchAllNews = async () => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/news/all`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching all news:', error);
+    return {
+      technology: [],
+      sports: [],
+      entertainment: []
+    };
+  }
+};
+
 export const newsAPI = {
   getTechnologyNews: () => fetchNews('technology', 'us', 20),
   getSportsNews: () => fetchNews('sports', 'us', 20), 
   getEntertainmentNews: () => fetchNews('entertainment', 'us', 20),
-  getAllNews: async () => {
-    const [tech, sports, entertainment] = await Promise.all([
-      fetchNews('technology', 'us', 15),
-      fetchNews('sports', 'us', 15),
-      fetchNews('entertainment', 'us', 15)
-    ]);
-    
-    return {
-      technology: tech.articles || [],
-      sports: sports.articles || [],
-      entertainment: entertainment.articles || []
-    };
-  }
+  getAllNews: fetchAllNews
 };

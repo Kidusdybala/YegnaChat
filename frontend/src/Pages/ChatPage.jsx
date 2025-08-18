@@ -40,7 +40,10 @@ const ChatPage = () => {
   
   // Handle video call
   const handleVideoCall = () => {
-    setShowVideoCall(true);
+    if (targetUser) {
+      // Navigate to call page with target user ID
+      navigate(`/call?userId=${targetUser._id}`);
+    }
   };
 
   // Handle ending the call

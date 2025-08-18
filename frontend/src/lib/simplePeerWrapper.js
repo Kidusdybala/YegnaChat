@@ -1,5 +1,6 @@
 // A wrapper for simple-peer to handle browser compatibility issues
 import SimplePeer from 'simple-peer';
+
 // Create a wrapper function that initializes SimplePeer with the correct options
 export function createPeer(options = {}) {
   try {
@@ -9,7 +10,9 @@ export function createPeer(options = {}) {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478' }
+          { urls: 'stun:global.stun.twilio.com:3478' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
         ]
       }
     };

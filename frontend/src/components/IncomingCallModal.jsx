@@ -11,7 +11,7 @@ const IncomingCallModal = () => {
 
   const handleAnswerCall = () => {
     // Navigate to call page with the caller's ID
-    navigate(`/call?userId=${incomingCall.from}`);
+    navigate(`/call?userId=${incomingCall.from}&autoAnswer=true`);
     setIncomingCall(null);
   };
 
@@ -25,15 +25,15 @@ const IncomingCallModal = () => {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]">
-      <div className="bg-base-100 p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4 animate-pulse">
+      <div className="bg-base-100 p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4">
         <div className="mb-6">
-          <div className="w-24 h-24 rounded-full bg-primary text-primary-content flex items-center justify-center mx-auto mb-4 text-3xl font-bold">
+          <div className="w-24 h-24 rounded-full bg-primary text-primary-content flex items-center justify-center mx-auto mb-4 text-3xl font-bold animate-pulse">
             {incomingCall.name?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           <h2 className="text-2xl font-bold text-base-content mb-2">
             Incoming Call
           </h2>
-          <p className="text-base-content opacity-70">
+          <p className="text-base-content opacity-70 text-lg">
             {incomingCall.name} is calling you
           </p>
         </div>
