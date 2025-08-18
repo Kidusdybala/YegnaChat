@@ -41,8 +41,8 @@ The issue was caused by:
 
 1. **Test Health Endpoints First:**
    ```
-   https://egnahat-kidusrash6706-0lwwbd1y.leapcell.dev/health
-   https://egnahat-kidusrash6706-0lwwbd1y.leapcell.dev/socket.io/health
+   https://egnahat-buddykk7781-6o6zpy2c.leapcell.dev/health
+   https://egnahat-buddykk7781-6o6zpy2c.leapcell.dev/socket.io/health
    ```
 
 2. **Use Connection Diagnostics:**
