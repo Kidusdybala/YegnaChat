@@ -3,7 +3,7 @@
 YegnaChat is a **real-time Ethiopian messaging app** built with modern web technologies.  
 It supports **chatting, video calling, media sharing**, and is optimized for speed and reliability.  
 
-🌍 **Live Demo:** [yegna-chat.vercel.app](https://yegna-chat.vercel.app)
+🌍 **Live Demo:** [yegna-chat.netlify.app](https://comfy-tiramisu-59c6aa.netlify.app/login)
 
 ---
 
@@ -14,7 +14,7 @@ It supports **chatting, video calling, media sharing**, and is optimized for spe
 - 📷 Media upload (Cloudinary integration)
 - 📰 News API integration (with backend proxy)
 - 🔒 Secure authentication & sessions
-- 🚀 Deployed on **Vercel** & **Netlify**
+- 🚀 Deployed on **leapcode** & **Netlify**
 
 ---
 
