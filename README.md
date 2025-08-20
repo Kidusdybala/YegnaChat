@@ -14,7 +14,7 @@ It supports **chatting, video calling, media sharing**, and is optimized for spe
 - 📷 Media upload (Cloudinary integration)
 - 📰 News API integration (with backend proxy)
 - 🔒 Secure authentication & sessions
-- 🚀 Deployed on **leapcode** & **Netlify**
+- 🚀 Deployed on **leapcell** & **Netlify**
 
 ---
 
