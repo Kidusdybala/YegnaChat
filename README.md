@@ -24,7 +24,7 @@ It supports **chatting, video calling, media sharing**, and is optimized for spe
 **Backend:** Node.js, Express, Socket.IO  
 **Database:** MongoDB (Mongoose)  
 **Media Storage:** Cloudinary  
-**Deployment:** Vercel + Netlify  
+**Deployment:** leapcell + Netlify  
 
 ---
 
@@ -74,15 +74,15 @@ NEWS_API_KEY=your_news_api_key
 
 ## 🚀 Deployment
 
-- Frontend: Deployed on **Vercel**
-- Backend: Can be deployed on **Heroku, Render, or Railway**
-- Configured for **Netlify + Vercel**
+- Frontend: Deployed on **Netlify**
+- Backend: Can be deployed on **leapcell**
+- Configured for **leapcell + Netlify**
 
 ---
 
 ## 👨‍💻 Author
 
-**Kidus Adugna (Kidusdybala)**  
+**Kidus Adugna**  
 💡 Passionate about building real-time applications and Ethiopian tech solutions.
 
 GitHub: [Kidusdybala](https://github.com/Kidusdybala)
