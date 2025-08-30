@@ -4,22 +4,19 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better caching
 COPY backend/package*.json ./
 
-# Install dependencies
+# Install production dependencies
 RUN npm ci --only=production
 
-# Copy source code
-COPY backend ./
+# Copy backend contents directly into /app (no need to move later)
+COPY backend/ ./
 
-# Move backend contents to root
-RUN mv backend/* ./ && rm -rf backend
-
-# Create uploads directory
+# Ensure uploads directory exists at runtime
 RUN mkdir -p uploads
 
-# Expose port
+# Expose the backend port
 EXPOSE 5001
 
 # Start the application
