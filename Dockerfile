@@ -11,7 +11,7 @@ COPY backend/package*.json ./
 RUN npm ci --only=production
 
 # Copy source code
-COPY backend/ ./
+COPY backend ./
 
 # Move backend contents to root
 RUN mv backend/* ./ && rm -rf backend
