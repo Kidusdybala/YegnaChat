@@ -7,6 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import fs from "fs";
+import { uploadToCloudinary } from "../lib/cloudinary.js";
 
 // Get directory name for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -100,11 +101,20 @@ export async function uploadMedia(req, res) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Return the file URL
-    const fileUrl = `/uploads/${file.filename}`;
-    res.status(200).json({ fileUrl });
+    // Upload to Cloudinary
+    const result = await uploadToCloudinary(file.path, 'yegnachat/chat-media');
+
+    // Delete local file after upload
+    fs.unlinkSync(file.path);
+
+    // Return the Cloudinary URL
+    res.status(200).json({
+      fileUrl: result.secure_url,
+      publicId: result.public_id
+    });
   } catch (error) {
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error('Upload error:', error);
+    res.status(500).json({ message: "Upload failed", error: error.message });
   }
 }
 

@@ -59,8 +59,7 @@ app.use(express.json({ limit: "10mb" })); // allow up to 10 MB
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
 
-// Add static file middleware AFTER app is initialized
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// Static file serving removed - using Cloudinary for media storage
 
 // Rate limiting middleware
 // Add this before your routes
