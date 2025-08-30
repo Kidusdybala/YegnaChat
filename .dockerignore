@@ -7,3 +7,5 @@ README.md
 .nyc_output
 coverage
 .coverage
+frontend/
+backend/node_modules
