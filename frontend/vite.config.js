@@ -6,8 +6,7 @@ export default defineConfig({
   plugins: [react()],
   define: {
     global: 'globalThis', // Define global as globalThis
-    'process.env': 'import.meta.env', // Use Vite's env
-    process: JSON.stringify({ env: {} }), // Define process object
+    'process.env': JSON.stringify({}), // Define empty process.env
   },
   resolve: {
     alias: {
