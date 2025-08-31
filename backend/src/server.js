@@ -36,8 +36,8 @@ const onlineUsers = new Map();
 // Initialize Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? [process.env.FRONTEND_URL, "https://yegnachat.vercel.app", "https://yegnachat-frontend.vercel.app"]
+    origin: process.env.NODE_ENV === 'production'
+      ? [process.env.FRONTEND_URL, "https://yegnachat.vercel.app", "https://yegnachat-frontend.vercel.app", "https://yegna-chat-git-master-kidusdybalas-projects-f36e0d51.vercel.app"]
       : ["http://localhost:5173", "http://yegnachat.local:5173"],
     credentials: true
   }
@@ -49,8 +49,8 @@ app.set('onlineUsers', onlineUsers);
 
 // THEN add middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL, "https://yegnachat.vercel.app", "https://yegnachat-frontend.vercel.app"]
+  origin: process.env.NODE_ENV === 'production'
+    ? [process.env.FRONTEND_URL, "https://yegnachat.vercel.app", "https://yegnachat-frontend.vercel.app", "https://yegna-chat-git-master-kidusdybalas-projects-f36e0d51.vercel.app"]
     : ["http://localhost:5173", "http://yegnachat.local:5173"],
   credentials: true
 }));
