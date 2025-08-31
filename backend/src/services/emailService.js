@@ -2,32 +2,88 @@ import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
 // Create transporter
-const createTransporter = () => {
+const createTransporter = async () => {
   // Check if email credentials are configured
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     throw new Error('Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS in .env file');
   }
 
   console.log('Creating Gmail transporter for user:', process.env.EMAIL_USER);
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+
+  // Try multiple Gmail SMTP configurations
+  const configs = [
+    // Config 1: Standard Gmail SMTP
+    {
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      secure: true,
+      tls: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 15000,
+      socketTimeout: 30000,
     },
-    // Essential for Railway: prevent timeouts
-    secure: true,
-    tls: {
-      rejectUnauthorized: false,
+    // Config 2: Manual SMTP settings
+    {
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      tls: {
+        ciphers: 'SSLv3',
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 15000,
+      socketTimeout: 30000,
     },
-    // Timeout settings
-    connectionTimeout: 30000,
-    greetingTimeout: 15000,
-    socketTimeout: 30000,
-    // Debug settings
-    debug: true,
-    logger: true,
-  });
+    // Config 3: Alternative port
+    {
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 15000,
+      socketTimeout: 30000,
+    }
+  ];
+
+  // Try each configuration until one works
+  for (let i = 0; i < configs.length; i++) {
+    try {
+      console.log(`Trying Gmail SMTP config ${i + 1}...`);
+      const transporter = nodemailer.createTransport({
+        ...configs[i],
+        debug: true,
+        logger: true,
+      });
+
+      // Test the connection
+      await transporter.verify();
+      console.log(`✅ Gmail SMTP config ${i + 1} works!`);
+      return transporter;
+    } catch (error) {
+      console.log(`❌ Gmail SMTP config ${i + 1} failed:`, error.message);
+      if (i === configs.length - 1) {
+        // Last config failed, throw error
+        throw new Error(`All Gmail SMTP configurations failed. Last error: ${error.message}`);
+      }
+    }
+  }
 };
 
 // Generate verification code
@@ -44,7 +100,7 @@ export const generateResetToken = () => {
 export const sendVerificationEmail = async (email, code, fullName) => {
   try {
     console.log(`📧 Attempting to send verification email to ${email} with code ${code}`);
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
 
     const mailOptions = {
       from: `"YegnaChat" <${process.env.EMAIL_USER}>`,
@@ -116,7 +172,7 @@ export const sendVerificationEmail = async (email, code, fullName) => {
 // Send password reset email
 export const sendPasswordResetEmail = async (email, resetToken, fullName) => {
   try {
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     
     const mailOptions = {
@@ -189,7 +245,7 @@ export const sendPasswordResetEmail = async (email, resetToken, fullName) => {
 // Send password reset code email
 export const sendPasswordResetCodeEmail = async (email, resetCode, fullName) => {
   try {
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
     
     const mailOptions = {
       from: `"YegnaChat" <${process.env.EMAIL_USER}>`,
