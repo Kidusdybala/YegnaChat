@@ -12,7 +12,11 @@ import {
 
 const router = express.Router();
 export function Logout(req, res) {
-  res.clearCookie("jwt"); // Clear JWT cookie
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production"
+  }); // Clear JWT cookie with same settings
   res.status(200).json({ message: "Logged out successfully" });
 }
 
@@ -48,7 +52,12 @@ export async function Login(req, res) {
     );
 
     // Set token in cookie (optional, or send in response)
-    res.cookie("jwt", token, { httpOnly: true, sameSite:"strict", secure: process.env.NODE_ENV === "production", maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days in ms
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    }); // 7 days in ms
     res.status(201).json({ success:true, user:user});
   } catch (error) {
     res.status(500).json({ message: "internal server", error: error.message });
