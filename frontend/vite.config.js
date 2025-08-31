@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   define: {
-    global: 'window', // Define global as window
-    'process.env': {}, // Provide a minimal process.env
+    global: 'globalThis', // Define global as globalThis
+    'process.env': 'import.meta.env', // Use Vite's env
+    process: JSON.stringify({ env: {} }), // Define process object
   },
   resolve: {
     alias: {

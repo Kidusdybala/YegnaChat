@@ -3,6 +3,17 @@
   "outputDirectory": "dist",
   "installCommand": "npm install --legacy-peer-deps --no-cache",
   "framework": "vite",
+  "headers": [
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!manifest\\.json).*)",
