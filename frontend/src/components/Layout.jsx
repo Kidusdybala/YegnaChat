@@ -1,4 +1,4 @@
-import Sidebar from './SideBar'; // Fixed casing
+import Sidebar from './Sidebar'; // Fixed casing
 import Navbar from './Navbar'; // Fixed casing
 import MobileBottomNav from './MobileBottomNav';
 import { useLocation } from 'react-router-dom';
