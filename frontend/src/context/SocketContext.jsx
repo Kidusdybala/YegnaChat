@@ -35,7 +35,10 @@ export const SocketContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (authUser) {
-      const newSocket = io("http://localhost:5001", {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const socketUrl = API_URL.replace('/api', ''); // Remove /api suffix for socket connection
+
+      const newSocket = io(socketUrl, {
         query: { userId: authUser._id },
       });
 
