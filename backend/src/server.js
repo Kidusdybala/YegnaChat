@@ -36,20 +36,10 @@ const onlineUsers = new Map();
 // Initialize Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      const allowedOrigins = process.env.NODE_ENV === 'production'
-        ? [process.env.FRONTEND_URL, "https://yegnachat.vercel.app", "https://yegnachat-frontend.vercel.app", "https://yegna-chat-git-master-kidusdybalas-projects-f36e0d51.vercel.app"]
-        : ["http://localhost:5173", "http://yegnachat.local:5173"];
-
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        console.log('Socket.IO CORS blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
-      }
+    origin(origin, callback) {
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      console.log('Socket.IO CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -62,21 +52,29 @@ app.set('io', io);
 app.set('onlineUsers', onlineUsers);
 
 // THEN add middleware
+// Centralized CORS allow logic with Vercel preview support
+const vercelProjectPattern = /^https:\/\/yegna-chat-[a-z0-9-]+-kidusdybalas-projects-f36e0d51\.vercel\.app$/;
+const baseAllowed = [
+  process.env.FRONTEND_URL,
+  "https://yegnachat.vercel.app",
+  "https://yegnachat-frontend.vercel.app",
+  "https://yegna-chat-git-master-kidusdybalas-projects-f36e0d51.vercel.app",
+  "http://localhost:5173",
+  "http://yegnachat.local:5173"
+].filter(Boolean);
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true; // Allow non-browser clients
+  if (baseAllowed.includes(origin)) return true;
+  if (vercelProjectPattern.test(origin)) return true;
+  return false;
+}
+
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    const allowedOrigins = process.env.NODE_ENV === 'production'
-      ? [process.env.FRONTEND_URL, "https://yegnachat.vercel.app", "https://yegnachat-frontend.vercel.app", "https://yegna-chat-git-master-kidusdybalas-projects-f36e0d51.vercel.app"]
-      : ["http://localhost:5173", "http://yegnachat.local:5173"];
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) return callback(null, true);
+    console.log('CORS blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

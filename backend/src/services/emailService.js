@@ -1,16 +1,42 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { Resend } from 'resend';
 
-// Create transporter
+// Initialize Resend client if API key is provided
+const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const getFromAddress = () => {
+  // IMPORTANT: Resend cannot send as @gmail.com unless you own and verify that domain.
+  // Use a verified custom domain or the default onboarding sender for testing.
+  // Configure EMAIL_FROM in env (e.g., "YegnaChat <no-reply@yegnachat.app>") once your domain is verified.
+  return process.env.EMAIL_FROM || 'onboarding@resend.dev';
+};
+
+// Try sending via Resend (HTTPS) — works on Railway
+const sendViaResend = async ({ to, subject, html }) => {
+  if (!resendClient) return false;
+  try {
+    const { error } = await resendClient.emails.send({
+      from: getFromAddress(),
+      to,
+      subject,
+      html,
+    });
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.error('Resend send error:', e?.message || e);
+    return false;
+  }
+};
+
+// Create transporter (SMTP) — kept as fallback, but may timeout on Railway
 const createTransporter = async () => {
-  // Check if email credentials are configured
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     throw new Error('Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS in .env file');
   }
 
   console.log('Creating Gmail transporter for user:', process.env.EMAIL_USER);
 
-  // Try multiple Gmail SMTP configurations
   const configs = [
     // Config 1: Standard Gmail SMTP
     {
@@ -62,7 +88,6 @@ const createTransporter = async () => {
     }
   ];
 
-  // Try each configuration until one works
   for (let i = 0; i < configs.length; i++) {
     try {
       console.log(`Trying Gmail SMTP config ${i + 1}...`);
@@ -71,15 +96,12 @@ const createTransporter = async () => {
         debug: true,
         logger: true,
       });
-
-      // Test the connection
       await transporter.verify();
       console.log(`✅ Gmail SMTP config ${i + 1} works!`);
       return transporter;
     } catch (error) {
       console.log(`❌ Gmail SMTP config ${i + 1} failed:`, error.message);
       if (i === configs.length - 1) {
-        // Last config failed, throw error
         throw new Error(`All Gmail SMTP configurations failed. Last error: ${error.message}`);
       }
     }
@@ -96,64 +118,146 @@ export const generateResetToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
 
+// Build email HTML fragments
+const buildVerificationHtml = (code, fullName) => `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+    <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #2563eb; margin: 0; font-size: 28px;">YegnaChat</h1>
+        <p style="color: #666; margin: 5px 0 0 0;">Welcome to the community!</p>
+      </div>
+      <h2 style="color: #333; margin-bottom: 20px;">Hi ${fullName}!</h2>
+      <p style="color: #555; line-height: 1.6; margin-bottom: 25px;">
+        Thank you for signing up for YegnaChat! To complete your registration and start chatting with friends, please verify your email address.
+      </p>
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;">
+        <p style="color: #333; margin: 0 0 10px 0; font-weight: bold;">Your verification code is:</p>
+        <div style="font-size: 32px; font-weight: bold; color: #2563eb; letter-spacing: 5px; font-family: monospace;">
+          ${code}
+        </div>
+      </div>
+      <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+        Enter this code in the YegnaChat app to verify your account. This code will expire in <strong>5 minutes</strong>.
+      </p>
+      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="color: #856404; margin: 0; font-size: 14px;">
+          <strong>Security tip:</strong> Never share this code with anyone. YegnaChat will never ask for your verification code via phone or email.
+        </p>
+      </div>
+      <p style="color: #888; font-size: 14px; margin-top: 30px; text-align: center;">
+        If you didn't create a YegnaChat account, please ignore this email.
+      </p>
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+        <p style="color: #888; font-size: 12px; margin: 0;">
+          © 2024 YegnaChat. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </div>
+`;
+
+const buildResetLinkHtml = (resetUrl, fullName) => `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+    <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #2563eb; margin: 0; font-size: 28px;">YegnaChat</h1>
+        <p style="color: #666; margin: 5px 0 0 0;">Password Reset Request</p>
+      </div>
+      <h2 style="color: #333; margin-bottom: 20px;">Hi ${fullName}!</h2>
+      <p style="color: #555; line-height: 1.6; margin-bottom: 25px;">
+        We received a request to reset your YegnaChat password. If you made this request, click the button below to reset your password.
+      </p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+          Reset My Password
+        </a>
+      </div>
+      <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+        If the button doesn't work, you can copy and paste this link into your browser:
+      </p>
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; word-break: break-all; font-family: monospace; font-size: 14px; color: #333;">
+        ${resetUrl}
+      </div>
+      <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="color: #721c24; margin: 0; font-size: 14px;">
+          <strong>Important:</strong> This link will expire in 1 hour. If you didn't request a password reset, please ignore this email and your password will remain unchanged.
+        </p>
+      </div>
+      <p style="color: #888; font-size: 14px; margin-top: 30px; text-align: center;">
+        If you're having trouble, contact our support team.
+      </p>
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+        <p style="color: #888; font-size: 12px; margin: 0;">
+          © 2024 YegnaChat. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </div>
+`;
+
+const buildResetCodeHtml = (resetCode, fullName) => `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+    <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #2563eb; margin: 0; font-size: 28px;">YegnaChat</h1>
+        <p style="color: #666; margin: 5px 0 0 0;">Password Reset Request</p>
+      </div>
+      <h2 style="color: #333; margin-bottom: 20px;">Hi ${fullName}!</h2>
+      <p style="color: #555; line-height: 1.6; margin-bottom: 25px;">
+        We received a request to reset your YegnaChat password. Use the verification code below to reset your password:
+      </p>
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;">
+        <p style="color: #333; margin: 0 0 10px 0; font-weight: bold;">Your password reset code is:</p>
+        <div style="font-size: 32px; font-weight: bold; color: #2563eb; letter-spacing: 5px; font-family: monospace;">
+          ${resetCode}
+        </div>
+      </div>
+      <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+        Enter this code on the password reset page to create your new password.
+      </p>
+      <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="color: #721c24; margin: 0; font-size: 14px;">
+          <strong>Important:</strong> This code will expire in 10 minutes. If you didn't request a password reset, please ignore this email and your password will remain unchanged.
+        </p>
+      </div>
+      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="color: #856404; margin: 0; font-size: 14px;">
+          <strong>Security tip:</strong> Never share this code with anyone. YegnaChat will never ask for your verification code via phone or email.
+        </p>
+      </div>
+      <p style="color: #888; font-size: 14px; margin-top: 30px; text-align: center;">
+        If you're having trouble, contact our support team.
+      </p>
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+        <p style="color: #888; font-size: 12px; margin: 0;">
+          © 2024 YegnaChat. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </div>
+`;
+
 // Send verification email
 export const sendVerificationEmail = async (email, code, fullName) => {
-  try {
-    console.log(`📧 Attempting to send verification email to ${email} with code ${code}`);
-    const transporter = await createTransporter();
+  const html = buildVerificationHtml(code, fullName);
 
-    const mailOptions = {
+  // Prefer Resend (HTTPS)
+  if (await sendViaResend({ to: email, subject: 'Verify Your YegnaChat Account', html })) {
+    console.log('✅ Verification email sent via Resend to:', email);
+    return true;
+  }
+
+  // Fallback to SMTP
+  try {
+    console.log(`📧 Attempting to send verification email via SMTP to ${email} with code ${code}`);
+    const transporter = await createTransporter();
+    await transporter.sendMail({
       from: `"YegnaChat" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Verify Your YegnaChat Account',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #2563eb; margin: 0; font-size: 28px;">YegnaChat</h1>
-              <p style="color: #666; margin: 5px 0 0 0;">Welcome to the community!</p>
-            </div>
-            
-            <h2 style="color: #333; margin-bottom: 20px;">Hi ${fullName}!</h2>
-            
-            <p style="color: #555; line-height: 1.6; margin-bottom: 25px;">
-              Thank you for signing up for YegnaChat! To complete your registration and start chatting with friends, please verify your email address.
-            </p>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;">
-              <p style="color: #333; margin: 0 0 10px 0; font-weight: bold;">Your verification code is:</p>
-              <div style="font-size: 32px; font-weight: bold; color: #2563eb; letter-spacing: 5px; font-family: monospace;">
-                ${code}
-              </div>
-            </div>
-            
-            <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
-              Enter this code in the YegnaChat app to verify your account. This code will expire in <strong>5 minutes</strong>.
-            </p>
-            
-            <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="color: #856404; margin: 0; font-size: 14px;">
-                <strong>Security tip:</strong> Never share this code with anyone. YegnaChat will never ask for your verification code via phone or email.
-              </p>
-            </div>
-            
-            <p style="color: #888; font-size: 14px; margin-top: 30px; text-align: center;">
-              If you didn't create a YegnaChat account, please ignore this email.
-            </p>
-            
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-              <p style="color: #888; font-size: 12px; margin: 0;">
-                © 2024 YegnaChat. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </div>
-      `,
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-    console.log('✅ Verification email sent successfully to:', email);
-    console.log('Message ID:', result.messageId);
+      html,
+    });
+    console.log('✅ Verification email sent via SMTP to:', email);
     return true;
   } catch (error) {
     console.error('❌ Error sending verification email to:', email);
@@ -164,71 +268,27 @@ export const sendVerificationEmail = async (email, code, fullName) => {
       response: error.response,
       responseCode: error.responseCode
     });
-    // Don't throw error - just log it for debugging
     return false;
   }
 };
 
-// Send password reset email
+// Send password reset email (link)
 export const sendPasswordResetEmail = async (email, resetToken, fullName) => {
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  const html = buildResetLinkHtml(resetUrl, fullName);
+
+  if (await sendViaResend({ to: email, subject: 'Reset Your YegnaChat Password', html })) {
+    return true;
+  }
+
   try {
     const transporter = await createTransporter();
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
-    const mailOptions = {
+    await transporter.sendMail({
       from: `"YegnaChat" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Reset Your YegnaChat Password',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #2563eb; margin: 0; font-size: 28px;">YegnaChat</h1>
-              <p style="color: #666; margin: 5px 0 0 0;">Password Reset Request</p>
-            </div>
-            
-            <h2 style="color: #333; margin-bottom: 20px;">Hi ${fullName}!</h2>
-            
-            <p style="color: #555; line-height: 1.6; margin-bottom: 25px;">
-              We received a request to reset your YegnaChat password. If you made this request, click the button below to reset your password.
-            </p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
-                Reset My Password
-              </a>
-            </div>
-            
-            <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
-              If the button doesn't work, you can copy and paste this link into your browser:
-            </p>
-            
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; word-break: break-all; font-family: monospace; font-size: 14px; color: #333;">
-              ${resetUrl}
-            </div>
-            
-            <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="color: #721c24; margin: 0; font-size: 14px;">
-                <strong>Important:</strong> This link will expire in 1 hour. If you didn't request a password reset, please ignore this email and your password will remain unchanged.
-              </p>
-            </div>
-            
-            <p style="color: #888; font-size: 14px; margin-top: 30px; text-align: center;">
-              If you're having trouble, contact our support team.
-            </p>
-            
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-              <p style="color: #888; font-size: 12px; margin: 0;">
-                © 2024 YegnaChat. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-
+      html,
+    });
     return true;
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -242,68 +302,22 @@ export const sendPasswordResetEmail = async (email, resetToken, fullName) => {
   }
 };
 
-// Send password reset code email
+// Send password reset code email (code)
 export const sendPasswordResetCodeEmail = async (email, resetCode, fullName) => {
+  const html = buildResetCodeHtml(resetCode, fullName);
+
+  if (await sendViaResend({ to: email, subject: 'Reset Your YegnaChat Password', html })) {
+    return true;
+  }
+
   try {
     const transporter = await createTransporter();
-    
-    const mailOptions = {
+    await transporter.sendMail({
       from: `"YegnaChat" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Reset Your YegnaChat Password',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #2563eb; margin: 0; font-size: 28px;">YegnaChat</h1>
-              <p style="color: #666; margin: 5px 0 0 0;">Password Reset Request</p>
-            </div>
-            
-            <h2 style="color: #333; margin-bottom: 20px;">Hi ${fullName}!</h2>
-            
-            <p style="color: #555; line-height: 1.6; margin-bottom: 25px;">
-              We received a request to reset your YegnaChat password. Use the verification code below to reset your password:
-            </p>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;">
-              <p style="color: #333; margin: 0 0 10px 0; font-weight: bold;">Your password reset code is:</p>
-              <div style="font-size: 32px; font-weight: bold; color: #2563eb; letter-spacing: 5px; font-family: monospace;">
-                ${resetCode}
-              </div>
-            </div>
-            
-            <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
-              Enter this code on the password reset page to create your new password.
-            </p>
-            
-            <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="color: #721c24; margin: 0; font-size: 14px;">
-                <strong>Important:</strong> This code will expire in 10 minutes. If you didn't request a password reset, please ignore this email and your password will remain unchanged.
-              </p>
-            </div>
-            
-            <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="color: #856404; margin: 0; font-size: 14px;">
-                <strong>Security tip:</strong> Never share this code with anyone. YegnaChat will never ask for your verification code via phone or email.
-              </p>
-            </div>
-            
-            <p style="color: #888; font-size: 14px; margin-top: 30px; text-align: center;">
-              If you're having trouble, contact our support team.
-            </p>
-            
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-              <p style="color: #888; font-size: 12px; margin: 0;">
-                © 2024 YegnaChat. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-
+      html,
+    });
     return true;
   } catch (error) {
     console.error('Error sending password reset code email:', error);
