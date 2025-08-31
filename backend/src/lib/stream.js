@@ -4,22 +4,25 @@ import "dotenv/config";
 const apiKey = process.env.STREAM_API_KEY;
 const apiSecret = process.env.STREAM_API_SECRET;
 
-if (!apiKey || !apiSecret) {
-  console.error(" Stream API key and secret are required");
-  console.error("Please set STREAM_API_KEY and STREAM_API_SECRET in your .env file");
-  throw new Error("Stream API credentials not configured");
-}
+let streamClient = null;
 
-// Validate API key format (Stream API keys are typically 12 characters)
-if (apiKey.length < 10) {
-  console.error(" Stream API key appears to be invalid (too short)");
-  throw new Error("Invalid Stream API key format");
+if (apiKey && apiSecret) {
+  // Validate API key format (Stream API keys are typically 12 characters)
+  if (apiKey.length < 10) {
+    console.error(" Stream API key appears to be invalid (too short)");
+  } else {
+    // Use the correct class name
+    streamClient = StreamChat.getInstance(apiKey, apiSecret);
+  }
+} else {
+  console.warn("Stream API credentials not configured. Stream Chat features will be disabled.");
 }
-
-// Use the correct class name
-const streamClient = StreamChat.getInstance(apiKey, apiSecret);
 
 export const upsertStreamUser = async (userData) => {
+  if (!streamClient) {
+    console.warn("Stream client not available. Skipping user upsert.");
+    return userData;
+  }
   try {
     await streamClient.upsertUsers([userData]);
     return userData;
@@ -29,6 +32,10 @@ export const upsertStreamUser = async (userData) => {
 };
 
 export const generateStreamToken = (userId) => {
+  if (!streamClient) {
+    console.warn("Stream client not available. Cannot generate token.");
+    return null;
+  }
   try {
     const userIdStr = userId.toString();
     const token = streamClient.createToken(userIdStr);
