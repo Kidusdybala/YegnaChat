@@ -8,12 +8,25 @@ const createTransporter = () => {
     throw new Error('Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS in .env file');
   }
 
+  console.log('Creating Gmail transporter for user:', process.env.EMAIL_USER);
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    // Essential for Railway: prevent timeouts
+    secure: true,
+    tls: {
+      rejectUnauthorized: false,
+    },
+    // Timeout settings
+    connectionTimeout: 30000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    // Debug settings
+    debug: true,
+    logger: true,
   });
 };
 
@@ -30,8 +43,9 @@ export const generateResetToken = () => {
 // Send verification email
 export const sendVerificationEmail = async (email, code, fullName) => {
   try {
+    console.log(`📧 Attempting to send verification email to ${email} with code ${code}`);
     const transporter = createTransporter();
-    
+
     const mailOptions = {
       from: `"YegnaChat" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -81,18 +95,21 @@ export const sendVerificationEmail = async (email, code, fullName) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
-
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Verification email sent successfully to:', email);
+    console.log('Message ID:', result.messageId);
     return true;
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    console.error('❌ Error sending verification email to:', email);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
     console.error('Error details:', {
-      code: error.code,
       command: error.command,
       response: error.response,
       responseCode: error.responseCode
     });
-    throw new Error(`Failed to send verification email: ${error.message}`);
+    // Don't throw error - just log it for debugging
+    return false;
   }
 };
 
