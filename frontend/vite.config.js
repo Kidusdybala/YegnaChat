@@ -28,7 +28,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ['simple-peer'],
+      // Removed external simple-peer to allow bundling
     },
   },
   server: {
