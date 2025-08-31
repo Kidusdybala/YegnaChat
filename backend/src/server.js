@@ -6,6 +6,7 @@ import { connectDB } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user.route.js";
 import chatRoutes from "./routes/chat.route.js";
+import newsRoutes from "./routes/news.route.js";
 // Add this import at the top with your other imports
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
@@ -107,6 +108,7 @@ app.use(compression());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/news", newsRoutes);
 
 // Remove static file serving since frontend is on Vercel
 // Backend only serves API routes
