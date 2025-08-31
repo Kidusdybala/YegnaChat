@@ -5,7 +5,7 @@
   "framework": "vite",
   "headers": [
     {
-      "source": "/manifest.json",
+      "source": "/static/manifest.json",
       "headers": [
         {
           "key": "Content-Type",
@@ -40,8 +40,8 @@
   "redirects": [
     {
       "source": "/manifest.json",
-      "destination": "/manifest.json",
-      "statusCode": 200
+      "destination": "/static/manifest.json",
+      "statusCode": 302
     }
   ]
 }

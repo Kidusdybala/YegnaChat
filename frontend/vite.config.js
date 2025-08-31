@@ -7,6 +7,12 @@ export default defineConfig({
   define: {
     global: 'globalThis', // Define global as globalThis
     'process.env': JSON.stringify({}), // Define empty process.env
+    process: JSON.stringify({
+      env: {},
+      version: '',
+      platform: 'browser',
+      browser: true
+    }), // Define complete process object
   },
   resolve: {
     alias: {
