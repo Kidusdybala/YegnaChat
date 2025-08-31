@@ -102,20 +102,13 @@ export async function Signup(req, res) {
         existingUser.emailVerificationExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
         await existingUser.save();
         
-        // Send verification email
-        try {
-          await sendVerificationEmail(email, verificationCode, existingUser.fullName);
-        } catch (emailError) {
-          console.error('Email sending failed:', emailError);
-          return res.status(500).json({ 
-            message: "Account created but failed to send verification email. Please try resending the code.",
-            emailError: true 
-          });
-        }
-        
-        return res.status(200).json({ 
+        // Send verification email asynchronously
+        sendVerificationEmail(email, verificationCode, existingUser.fullName)
+          .catch(error => console.error('Email send failed:', error));
+
+        return res.status(200).json({
           message: "Verification email sent. Please check your inbox.",
-          emailSent: true 
+          emailSent: true
         });
       }
     }
@@ -136,22 +129,18 @@ export async function Signup(req, res) {
     });
     
     await user.save();
+    console.log('✅ User created successfully:', user.email);
 
+    // Send email asynchronously (DO NOT await - this prevents hanging)
+    sendVerificationEmail(email, verificationCode, fullName)
+      .then(() => console.log('✅ Verification email sent to:', email))
+      .catch(error => console.error('❌ Email send failed:', error));
 
-    // Send verification email
-    try {
-      await sendVerificationEmail(email, verificationCode, fullName);
-      res.status(201).json({ 
-        message: "Account created! Please check your email for verification code.",
-        emailSent: true 
-      });
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      res.status(500).json({ 
-        message: "Account created but failed to send verification email. Please try resending the code.",
-        emailError: true 
-      });
-    }
+    // Return response immediately
+    res.status(201).json({
+      message: "Account created! Please check your email for verification code.",
+      emailSent: true
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -336,16 +325,9 @@ export async function resendVerificationCode(req, res) {
 
     await user.save();
 
-    // Send verification email
-    try {
-      await sendVerificationEmail(email, verificationCode, user.fullName);
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      return res.status(500).json({ 
-        message: "Failed to send verification email. Please try again.",
-        emailError: true 
-      });
-    }
+    // Send verification email asynchronously
+    sendVerificationEmail(email, verificationCode, user.fullName)
+      .catch(error => console.error('Email send failed:', error));
 
     return res.status(200).json({
       message: "Verification code sent successfully"
@@ -390,16 +372,9 @@ export async function forgotPassword(req, res) {
 
     await user.save();
 
-    // Send password reset code email
-    try {
-      await sendPasswordResetCodeEmail(email, resetCode, user.fullName);
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      return res.status(500).json({ 
-        message: "Failed to send password reset email. Please try again.",
-        emailError: true 
-      });
-    }
+    // Send password reset code email asynchronously
+    sendPasswordResetCodeEmail(email, resetCode, user.fullName)
+      .catch(error => console.error('Password reset email failed:', error));
 
     return res.status(200).json({
       message: "If an account with that email exists, a password reset code has been sent."
