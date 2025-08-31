@@ -5,10 +5,12 @@ import axiosInstance from './axios';
 export const authAPI = {
   getCurrentUser: async () => {
     try {
+      console.log("Making /auth/me request...");
       const res = await axiosInstance.get("/auth/me");
+      console.log("Auth success:", res.data);
       return res.data;
     } catch (error) {
-      console.error("Auth error:", error);
+      console.error("Auth error:", error.response?.status, error.response?.data);
       return { user: null };
     }
   },

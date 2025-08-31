@@ -11,8 +11,15 @@ const useLogin = () => {
     mutationFn: authAPI.login,
     onSuccess: (data) => {
       toast.success('Logged in successfully!');
+
+      // Clear and refetch auth user data
+      queryClient.removeQueries({ queryKey: ['authUser'] });
       queryClient.invalidateQueries({ queryKey: ['authUser'] });
-      navigate('/');
+
+      // Small delay to ensure cookie is set before navigation
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     },
     onError: (error) => {
       console.error('Login error:', error);
