@@ -12,6 +12,11 @@ const useLogin = () => {
     onSuccess: (data) => {
       toast.success('Logged in successfully!');
 
+      // Store JWT token for header-based auth (in addition to cookies)
+      if (data?.token) {
+        localStorage.setItem('jwt_token', data.token);
+      }
+
       // Clear and refetch auth user data
       queryClient.removeQueries({ queryKey: ['authUser'] });
       queryClient.invalidateQueries({ queryKey: ['authUser'] });

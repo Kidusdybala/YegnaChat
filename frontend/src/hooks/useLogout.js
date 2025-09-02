@@ -30,6 +30,8 @@ export const useLogout = () => {
   });
 
   const logout = () => {
+    // Clear token used for header-based auth
+    localStorage.removeItem('jwt_token');
     logoutMutation.mutate();
   };
 

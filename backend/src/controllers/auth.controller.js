@@ -51,7 +51,7 @@ export async function Login(req, res) {
       { expiresIn: "7d" }
     );
 
-    // Set token in cookie (optional, or send in response)
+    // Set token in cookie (optional), and also return it for header-based auth
     res.cookie("jwt", token, {
       httpOnly: true,
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // allow cross-site cookies in production
@@ -60,7 +60,7 @@ export async function Login(req, res) {
       domain: process.env.COOKIE_DOMAIN || undefined,
       maxAge: 7 * 24 * 60 * 60 * 1000
     }); // 7 days in ms
-    res.status(201).json({ success:true, user:user});
+    res.status(201).json({ success:true, user:user, token });
   } catch (error) {
     res.status(500).json({ message: "internal server", error: error.message });
   }
