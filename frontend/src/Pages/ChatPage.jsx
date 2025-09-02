@@ -22,7 +22,6 @@ const ChatPage = () => {
   const [targetUser, setTargetUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [chatId, setChatId] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
   
@@ -201,8 +200,8 @@ const ChatPage = () => {
   // If no chat is selected, show the chat list in a centered layout
   if (!targetUserId) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
-        <div className="lg:col-span-1 border-r border-base-300 h-full">
+      <div className="flex flex-col h-full bg-base-100 lg:grid lg:grid-cols-3 lg:h-full">
+        <div className="lg:col-span-1 border-r border-base-300 h-full lg:h-full overflow-hidden">
           <ChatList />
         </div>
         <div className="hidden lg:flex lg:col-span-2 items-center justify-center bg-base-100">
@@ -220,14 +219,14 @@ const ChatPage = () => {
   
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
-        <div className="hidden lg:block lg:col-span-1 border-r border-base-300 h-full">
+      <div className="flex flex-col h-full bg-base-100 lg:grid lg:grid-cols-3 lg:h-full">
+        <div className="hidden lg:block lg:col-span-1 border-r border-base-300 h-full lg:h-full overflow-hidden">
           <ChatList />
         </div>
-        <div className="col-span-1 lg:col-span-2 flex items-center justify-center bg-base-100">
+        <div className="flex flex-col h-full lg:col-span-2 items-center justify-center bg-base-100">
           <div className="text-center p-6">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-base-content">Loading chat...</p>
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent mb-4"></div>
+            <p className="text-base-content text-lg">Loading chat...</p>
           </div>
         </div>
       </div>
@@ -235,12 +234,12 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 h-full bg-base-100">
-      <div className="hidden lg:block lg:col-span-1 border-r border-base-300 h-full">
+    <div className="flex flex-col h-full bg-base-100 lg:grid lg:grid-cols-3 lg:h-full">
+      <div className="hidden lg:block lg:col-span-1 border-r border-base-300 h-full overflow-hidden">
         <ChatList />
       </div>
 
-      <div className="col-span-1 lg:col-span-2 flex flex-col h-full relative">
+      <div className="flex flex-col h-full lg:col-span-2 relative">
         {/* Show VideoCall component when showVideoCall is true */}
         {showVideoCall && targetUser && (
           <VideoCall targetUser={targetUser} onEndCall={handleEndCall} />
@@ -308,7 +307,7 @@ const ChatPage = () => {
         </div>
     
         {/* Messages - Enhanced mobile-friendly layout */}
-        <div className="flex-1 overflow-y-auto px-3 sm:px-4 lg:px-6 py-3 bg-gradient-to-b from-base-200 to-base-100">
+        <div className="flex-1 overflow-y-auto px-3 sm:px-4 lg:px-6 py-3 bg-gradient-to-b from-base-200 to-base-100 min-h-0">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-8">
               <MessageCircle className="w-12 h-12 sm:w-16 sm:h-16 text-base-content opacity-20 mb-4" />
