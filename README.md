@@ -2,7 +2,24 @@
 
 ![YegnaChat Logo](frontend/public/Logo.png)
 
-A modern, real-time Ethiopian messaging application built with the MERN stack. Experience seamless communication with friends and family through our feature-rich chat platform.
+[![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-8.9.3-green.svg)](https://www.mongodb.com/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-black.svg)](https://socket.io/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-black.svg)](https://vercel.com)
+[![Render](https://img.shields.io/badge/Render-Deployed-blue.svg)](https://render.com)
+
+🇪🇹 **A modern, real-time Ethiopian messaging application** built with the MERN stack. "YegnaChat" means "Our Chat" in Amharic, bringing Ethiopian communities together through seamless communication. Experience instant messaging, video calls, and file sharing with friends and family across Ethiopia and beyond.
+
+## 🌍 About YegnaChat
+
+YegnaChat was created with the Ethiopian diaspora and local communities in mind. Whether you're connecting with family in Addis Ababa, studying abroad, or building business relationships, YegnaChat provides a culturally-aware platform that respects Ethiopian values while delivering modern communication features.
+
+### 🎯 Our Mission
+- **Bridge Communities**: Connect Ethiopians worldwide
+- **Preserve Culture**: Maintain Ethiopian identity in digital spaces
+- **Empower Communication**: Provide accessible, reliable messaging
+- **Support Local Businesses**: Help Ethiopian entrepreneurs connect with customers
 
 ## ✨ Features
 
@@ -14,6 +31,17 @@ A modern, real-time Ethiopian messaging application built with the MERN stack. E
 - **Friend System**: Add friends and manage connections
 - **Online Status**: See when friends are online
 - **Mobile Responsive**: Optimized for all devices
+
+### 📱 Screenshots
+
+#### Chat Interface
+![Chat Interface](frontend/public/Screenshot%202025-09-01%20225416.png)
+
+#### User Dashboard
+![User Dashboard](frontend/public/Screenshot%202025-09-01%20232658.png)
+
+#### Mobile Experience
+![Mobile Experience](frontend/public/Screenshot%202025-09-03%20013817.png)
 
 ### 🎨 UI/UX Features
 - **Modern Design**: Beautiful interface with DaisyUI and Tailwind CSS
