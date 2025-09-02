@@ -114,6 +114,10 @@ export async function Signup(req, res) {
         
         // Send verification email asynchronously
         sendVerificationEmail(email, verificationCode, existingUser.fullName)
+          .then((ok) => {
+            if (ok) console.log('✅ Verification email sent to:', email);
+            else console.error('❌ Verification email failed for:', email);
+          })
           .catch(error => console.error('Email send failed:', error));
 
         return res.status(200).json({
@@ -142,7 +146,10 @@ export async function Signup(req, res) {
 
     // Send email asynchronously (DO NOT await - this prevents hanging)
     sendVerificationEmail(email, verificationCode, fullName)
-      .then(() => console.log(' Verification email sent to:', email))
+      .then((ok) => {
+        if (ok) console.log('✅ Verification email sent to:', email);
+        else console.error('❌ Verification email failed for:', email);
+      })
       .catch(error => console.error(' Email send failed:', error));
 
     // Return response immediately
@@ -317,6 +324,10 @@ export async function resendVerificationCode(req, res) {
 
     // Send verification email asynchronously
     sendVerificationEmail(email, verificationCode, user.fullName)
+      .then((ok) => {
+        if (ok) console.log('✅ Verification email sent to:', email);
+        else console.error('❌ Verification email failed for:', email);
+      })
       .catch(error => console.error('Email send failed:', error));
 
     return res.status(200).json({

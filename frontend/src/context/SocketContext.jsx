@@ -40,6 +40,13 @@ export const SocketContextProvider = ({ children }) => {
 
       const newSocket = io(socketUrl, {
         query: { userId: authUser._id },
+        transports: ['websocket', 'polling'],
+        withCredentials: true,
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 500,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
       });
 
       setSocket(newSocket);

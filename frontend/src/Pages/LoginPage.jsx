@@ -140,6 +140,21 @@ export const LoginPage = () => {
                   )}
                 </button>
 
+                {/* DEMO ACCOUNTS */}
+                <div className="mt-4 p-3 rounded-lg bg-base-200 border border-base-300">
+                  <p className="text-sm font-semibold mb-2 text-center">Demo accounts</p>
+                  <div className="text-xs grid grid-cols-1 gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono break-all">kidusbeckham@gmail.com</span>
+                      <span className="badge badge-ghost">0968</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono break-all">buddykk07@gmail.com</span>
+                      <span className="badge badge-ghost">0968</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* SIGN UP LINK */}
                 <div className="text-center mt-4">
                   <p className="text-sm">
