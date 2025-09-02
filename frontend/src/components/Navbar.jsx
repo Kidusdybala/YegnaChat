@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import useAuthUser from "../hooks/useAuthUser";
 import { BellIcon, LogOutIcon, ShipWheelIcon } from "lucide-react";
@@ -7,8 +7,6 @@ import LogoutConfirmModal from "./LogoutConfirmModal";
 
 const Navbar = () => {
   const { authUser, logout, isLoggingOut } = useAuthUser();
-  const location = useLocation();
-  const isChatPage = location.pathname?.startsWith("/chat");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const profilePicUrl = getProfilePictureUrl(authUser);
@@ -48,20 +46,20 @@ const Navbar = () => {
           <div className="hidden lg:block flex-1"></div>
 
           {/* Right side - User controls (always on the right) */}
-          <div className="flex items-center gap-1 sm:gap-2 ml-auto">
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
             <Link to={"/notifications"}>
-              <button className="btn btn-ghost btn-circle touch-target min-h-[44px] min-w-[44px]">
+              <button className="btn btn-ghost btn-circle touch-target min-h-[44px] min-w-[44px] hover:bg-base-300 transition-colors">
                 <BellIcon className="h-5 w-5 sm:h-6 sm:w-6 text-base-content opacity-70" />
               </button>
             </Link>
 
             <Link to="/editprofile" className="touch-target">
               <div className="avatar">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full ring-2 ring-transparent hover:ring-primary transition-all">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full ring-2 ring-transparent hover:ring-primary transition-all duration-200">
                   {profilePicUrl ? (
-                    <img 
-                      src={profilePicUrl} 
-                      alt="User Avatar" 
+                    <img
+                      src={profilePicUrl}
+                      alt="User Avatar"
                       className="rounded-full object-cover w-full h-full"
                       onError={(e) => {
                         console.warn('Profile picture failed to load:', profilePicUrl);
@@ -70,8 +68,8 @@ const Navbar = () => {
                       }}
                     />
                   ) : null}
-                  <div 
-                    className="w-full h-full rounded-full bg-primary flex items-center justify-center text-primary-content font-semibold text-sm"
+                  <div
+                    className="w-full h-full rounded-full bg-gradient-to-br from-primary to-primary-focus flex items-center justify-center text-primary-content font-semibold text-sm sm:text-base shadow-md"
                     style={{ display: profilePicUrl ? 'none' : 'flex' }}
                   >
                     {authUser?.fullName?.charAt(0)?.toUpperCase() || 'U'}
@@ -81,14 +79,14 @@ const Navbar = () => {
             </Link>
 
             {/* Logout button */}
-            <button 
-              className="btn btn-ghost btn-circle touch-target min-h-[44px] min-w-[44px]" 
+            <button
+              className="btn btn-ghost btn-circle touch-target min-h-[44px] min-w-[44px] hover:bg-base-300 transition-colors"
               onClick={handleLogoutClick}
               disabled={isLoggingOut}
               title="Logout"
             >
               {isLoggingOut ? (
-                <span className="loading loading-spinner loading-xs sm:loading-sm"></span>
+                <span className="loading loading-spinner loading-sm"></span>
               ) : (
                 <LogOutIcon className="h-5 w-5 sm:h-6 sm:w-6 text-base-content opacity-70" />
               )}

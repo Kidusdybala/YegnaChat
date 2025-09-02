@@ -200,8 +200,8 @@ const ChatPage = () => {
   // If no chat is selected, show the chat list in a centered layout
   if (!targetUserId) {
     return (
-      <div className="flex flex-col h-full bg-base-100 lg:grid lg:grid-cols-3 lg:h-full">
-        <div className="lg:col-span-1 border-r border-base-300 h-full lg:h-full overflow-hidden">
+      <div className="flex flex-col min-h-screen bg-base-100 lg:grid lg:grid-cols-3 lg:min-h-screen ios-safe-area">
+        <div className="lg:col-span-1 border-r border-base-300 min-h-screen lg:min-h-screen overflow-hidden">
           <ChatList />
         </div>
         <div className="hidden lg:flex lg:col-span-2 items-center justify-center bg-base-100">
@@ -219,11 +219,11 @@ const ChatPage = () => {
   
   if (loading) {
     return (
-      <div className="flex flex-col h-full bg-base-100 lg:grid lg:grid-cols-3 lg:h-full">
-        <div className="hidden lg:block lg:col-span-1 border-r border-base-300 h-full lg:h-full overflow-hidden">
+      <div className="flex flex-col min-h-screen bg-base-100 lg:grid lg:grid-cols-3 lg:min-h-screen ios-safe-area">
+        <div className="hidden lg:block lg:col-span-1 border-r border-base-300 min-h-screen lg:min-h-screen overflow-hidden">
           <ChatList />
         </div>
-        <div className="flex flex-col h-full lg:col-span-2 items-center justify-center bg-base-100">
+        <div className="flex flex-col min-h-screen lg:col-span-2 items-center justify-center bg-base-100">
           <div className="text-center p-6">
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent mb-4"></div>
             <p className="text-base-content text-lg">Loading chat...</p>
@@ -234,12 +234,12 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-base-100 lg:grid lg:grid-cols-3 lg:h-full">
-      <div className="hidden lg:block lg:col-span-1 border-r border-base-300 h-full overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-base-100 lg:grid lg:grid-cols-3 lg:min-h-screen ios-safe-area">
+      <div className="hidden lg:block lg:col-span-1 border-r border-base-300 min-h-screen overflow-hidden">
         <ChatList />
       </div>
 
-      <div className="flex flex-col h-full lg:col-span-2 relative">
+      <div className="flex flex-col min-h-screen lg:col-span-2 relative ios-safe-area">
         {/* Show VideoCall component when showVideoCall is true */}
         {showVideoCall && targetUser && (
           <VideoCall targetUser={targetUser} onEndCall={handleEndCall} />
