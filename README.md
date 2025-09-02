@@ -1,4 +1,4 @@
-# YegnaChat 🌟
+# YegnaChat 
 
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
@@ -9,19 +9,19 @@
 
 🇪🇹 **A modern, real-time Ethiopian messaging application** built with the MERN stack. "YegnaChat" means "Our Chat" in Amharic, bringing Ethiopian communities together through seamless communication. Experience instant messaging, video calls, and file sharing with friends and family across Ethiopia and beyond.
 
-## 🌍 About YegnaChat
+##  About YegnaChat
 
 YegnaChat was created with the Ethiopian diaspora and local communities in mind. Whether you're connecting with family in Addis Ababa, studying abroad, or building business relationships, YegnaChat provides a culturally-aware platform that respects Ethiopian values while delivering modern communication features.
 
-### 🎯 Our Mission
+###  Our Mission
 - **Bridge Communities**: Connect Ethiopians worldwide
 - **Preserve Culture**: Maintain Ethiopian identity in digital spaces
 - **Empower Communication**: Provide accessible, reliable messaging
 - **Support Local Businesses**: Help Ethiopian entrepreneurs connect with customers
 
-## ✨ Features
+##  Features
 
-### 🚀 Core Features
+###  Core Features
 - **Real-time Messaging**: Instant message delivery with Socket.IO
 - **Video Calling**: High-quality video calls with WebRTC
 - **File Sharing**: Share images and media files
@@ -30,7 +30,7 @@ YegnaChat was created with the Ethiopian diaspora and local communities in mind.
 - **Online Status**: See when friends are online
 - **Mobile Responsive**: Optimized for all devices
 
-### 📱 Screenshots
+###  Screenshots
 
 #### Chat Interface
 ![Chat Interface](frontend/public/Screenshot%202025-09-01%20225416.png)
@@ -40,21 +40,21 @@ YegnaChat was created with the Ethiopian diaspora and local communities in mind.
 #### chat page
 ![Mobile Experience](frontend/public/Screenshot%202025-09-03%20013817.png)
 
-### 🎨 UI/UX Features
+###  UI/UX Features
 - **Modern Design**: Beautiful interface with DaisyUI and Tailwind CSS
 - **Dark/Light Themes**: Theme switching capability
 - **Mobile-First**: Responsive design for phones and tablets
 - **Smooth Animations**: Fluid transitions and interactions
 - **Touch-Friendly**: Optimized touch targets for mobile
 
-### 🔧 Technical Features
+###  Technical Features
 - **Rate Limiting**: API protection with express-rate-limit
 - **Compression**: Optimized response times
 - **Cloud Storage**: Media files stored on Cloudinary
 - **Email Notifications**: User verification and notifications
 - **Real-time Updates**: Live chat and presence indicators
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **React 18** - Modern React with hooks
@@ -81,7 +81,7 @@ YegnaChat was created with the Ethiopian diaspora and local communities in mind.
 - **MongoDB Atlas** - Cloud database
 - **GitHub Actions** - CI/CD (optional)
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Node.js >= 18.0.0
@@ -145,7 +145,7 @@ YegnaChat was created with the Ethiopian diaspora and local communities in mind.
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:5001
 
-## 📱 Mobile Development
+##  Mobile Development
 
 ### iOS Safari Support
 - Optimized viewport handling for iOS devices
@@ -158,7 +158,7 @@ YegnaChat was created with the Ethiopian diaspora and local communities in mind.
 - Optimized touch targets (minimum 44px)
 - Material Design inspired components
 
-## 🚀 Deployment
+##  Deployment
 
 ### Backend (Render)
 1. Connect your GitHub repository to Render
@@ -241,7 +241,7 @@ YegnaChat/
 - `GET /api/chat/:chatId/messages` - Get chat messages
 - `POST /api/chat/:chatId/messages` - Send message
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Common Issues
 
@@ -280,7 +280,7 @@ npm install
 - Ensure VITE_ prefixed environment variables
 - Verify build commands in vercel.json
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -292,19 +292,13 @@ npm install
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - [DaisyUI](https://daisyui.com/) for beautiful components
 - [Tailwind CSS](https://tailwindcss.com/) for utility-first CSS
 - [Socket.IO](https://socket.io/) for real-time communication
 - [Cloudinary](https://cloudinary.com/) for media storage
 
-## 📞 Support
+## Support
 
-For support, email kidusdybala@gmail.com or create an issue in this repository.
-
----
-
-**Made with ❤️ in Ethiopia** 🇪🇹
-
-![YegnaChat Preview](frontend/public/YegnaChat.jpg)
+For support, email sam684751@gmail.com or create an issue in this repository.
