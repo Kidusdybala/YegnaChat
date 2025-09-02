@@ -239,18 +239,18 @@ const ChatPage = () => {
       <div className="hidden lg:block lg:col-span-1 border-r border-base-300 h-full">
         <ChatList />
       </div>
-      
+
       <div className="col-span-1 lg:col-span-2 flex flex-col h-full relative">
         {/* Show VideoCall component when showVideoCall is true */}
         {showVideoCall && targetUser && (
           <VideoCall targetUser={targetUser} onEndCall={handleEndCall} />
         )}
-        
+
         {/* Chat Header */}
-        <div className="bg-primary px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex items-center justify-between text-primary-content shadow-md">
+        <div className="bg-gradient-to-r from-primary to-primary-focus px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex items-center justify-between text-primary-content shadow-lg border-b border-primary-focus/20">
           {/* Mobile back button */}
-          <button 
-            className="lg:hidden btn btn-ghost btn-circle btn-sm text-primary-content mr-2"
+          <button
+            className="lg:hidden btn btn-ghost btn-circle btn-sm text-primary-content mr-2 hover:bg-primary-focus/50 transition-colors"
             onClick={() => window.history.back()}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,40 +262,43 @@ const ChatPage = () => {
           <div className="flex-1 flex justify-center lg:justify-center">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="avatar">
-                <div className="w-8 sm:w-10 lg:w-12 rounded-full">
+                <div className="w-9 sm:w-11 lg:w-13 rounded-full ring-2 ring-white/20">
                   {getProfilePictureUrl(targetUser) ? (
                     <img
                       src={getProfilePictureUrl(targetUser)}
                       alt={targetUser?.fullName}
-                      className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full object-cover border-2 border-white shadow-md"
+                      className="w-9 h-9 sm:w-11 sm:h-11 lg:w-13 lg:h-13 rounded-full object-cover"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextSibling.style.display = 'flex';
                       }}
                     />
                   ) : null}
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full bg-primary-content/20 flex items-center justify-center text-primary-content font-semibold border-2 border-primary-content/30 shadow-md text-xs sm:text-sm lg:text-base" style={{display: getProfilePictureUrl(targetUser) ? 'none' : 'flex'}}>
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 lg:w-13 lg:h-13 rounded-full bg-primary-content/20 flex items-center justify-center text-primary-content font-semibold text-sm sm:text-base lg:text-lg" style={{display: getProfilePictureUrl(targetUser) ? 'none' : 'flex'}}>
                     {getUserInitials(targetUser)}
                   </div>
                 </div>
               </div>
               <div className="text-center min-w-0">
                 <h2 className="font-semibold text-primary-content text-sm sm:text-base lg:text-lg truncate">{targetUser?.fullName}</h2>
-                <p className="text-xs sm:text-sm text-primary-content opacity-75">Online</p>
+                <div className="flex items-center justify-center space-x-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <p className="text-xs sm:text-sm text-primary-content opacity-90">Online</p>
+                </div>
               </div>
             </div>
           </div>
-    
+
           <div className="flex space-x-1 sm:space-x-2">
-            <button 
-              className="p-1.5 sm:p-2 hover:bg-primary-focus rounded-full transition-colors text-primary-content"
+            <button
+              className="p-2 sm:p-2.5 hover:bg-primary-focus/50 rounded-full transition-all duration-200 text-primary-content hover:scale-105 active:scale-95"
               onClick={() => navigate(`/call?userId=${targetUserId}`)}
               title="Start call"
             >
               <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <button 
-              className="p-1.5 sm:p-2 hover:bg-primary-focus rounded-full transition-colors text-primary-content"
+            <button
+              className="p-2 sm:p-2.5 hover:bg-primary-focus/50 rounded-full transition-all duration-200 text-primary-content hover:scale-105 active:scale-95"
               onClick={handleVideoCall}
               title="Start video call"
             >
@@ -304,93 +307,100 @@ const ChatPage = () => {
           </div>
         </div>
     
-        {/* Messages - Telegram-style Layout: Sent messages on LEFT, Received messages on RIGHT */}
-        <div className="flex-1 overflow-y-auto px-2 sm:px-3 lg:px-4 py-2 bg-base-200">
-          {messages.map((message) => {
-            const isMyMessage = message.sender._id === authUser._id;
-            return (
-              <div
-                key={message._id}
-                className={`flex mb-3 sm:mb-4 ${isMyMessage ? "justify-start" : "justify-end"}`}
-              >
-                <div className={`flex items-start space-x-1.5 sm:space-x-2 max-w-[85%] sm:max-w-[75%] ${isMyMessage ? "flex-row" : "flex-row-reverse space-x-reverse"}`}>
-                  {/* Avatar for received messages only */}
-                  {!isMyMessage && (
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden">
-                        {getProfilePictureUrl(targetUser) ? (
-                          <img
-                            src={getProfilePictureUrl(targetUser)}
-                            alt={targetUser?.fullName}
-                            className="w-6 h-6 sm:w-8 sm:h-8 object-cover"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary flex items-center justify-center text-primary-content font-medium text-xs sm:text-sm" style={{display: getProfilePictureUrl(targetUser) ? 'none' : 'flex'}}>
-                          {getUserInitials(targetUser)}
+        {/* Messages - Enhanced mobile-friendly layout */}
+        <div className="flex-1 overflow-y-auto px-3 sm:px-4 lg:px-6 py-3 bg-gradient-to-b from-base-200 to-base-100">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center py-8">
+              <MessageCircle className="w-12 h-12 sm:w-16 sm:h-16 text-base-content opacity-20 mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold text-base-content mb-2">No messages yet</h3>
+              <p className="text-sm text-base-content opacity-60">Start the conversation!</p>
+            </div>
+          ) : (
+            messages.map((message) => {
+              const isMyMessage = message.sender._id === authUser._id;
+              return (
+                <div
+                  key={message._id}
+                  className={`flex mb-4 sm:mb-5 ${isMyMessage ? "justify-start" : "justify-end"}`}
+                >
+                  <div className={`flex items-end space-x-2 sm:space-x-3 max-w-[88%] sm:max-w-[80%] ${isMyMessage ? "flex-row" : "flex-row-reverse space-x-reverse"}`}>
+                    {/* Avatar for received messages only */}
+                    {!isMyMessage && (
+                      <div className="flex-shrink-0 mb-1">
+                        <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-base-300">
+                          {getProfilePictureUrl(targetUser) ? (
+                            <img
+                              src={getProfilePictureUrl(targetUser)}
+                              alt={targetUser?.fullName}
+                              className="w-7 h-7 sm:w-9 sm:h-9 object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div className="w-7 h-7 sm:w-9 sm:h-9 bg-primary flex items-center justify-center text-primary-content font-medium text-xs sm:text-sm" style={{display: getProfilePictureUrl(targetUser) ? 'none' : 'flex'}}>
+                            {getUserInitials(targetUser)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  <div className="flex flex-col min-w-0">
-                    {/* Message bubble */}
-                    <div
-                      className={`relative px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl shadow-sm max-w-full ${isMyMessage
-                        ? "bg-primary text-primary-content rounded-bl-md"
-                        : "bg-base-100 text-base-content border border-base-300 rounded-br-md"
-                      }`}
-                    >
-                      {/* Message content */}
-                      {message.content.startsWith('/uploads/') ? (
-                        <div className="rounded-lg overflow-hidden">
-                          <img 
-                            src={`http://localhost:5001${message.content}`} 
-                            alt="Shared image" 
-                            className="max-w-full h-auto rounded-lg max-w-[280px] sm:max-w-xs"
-                            loading="lazy"
-                          />
-                        </div>
-                      ) : (
-                        <p className="text-xs sm:text-sm leading-relaxed break-words whitespace-pre-wrap">
-                          {message.content}
-                        </p>
-                      )}
-                      
-                      {/* Time and status */}
-                      <div className={`flex items-center justify-end mt-1 space-x-1 ${isMyMessage ? "text-primary-content opacity-70" : "text-base-content opacity-60"}`}>
-                        <span className="text-xs">
-                          {new Date(message.createdAt).toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </span>
-                        {isMyMessage && (
-                          <svg className="w-3 h-3 sm:w-4 sm:h-4 opacity-80" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                      
+                    )}
 
+                    <div className="flex flex-col min-w-0">
+                      {/* Message bubble */}
+                      <div
+                        className={`relative px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl shadow-lg max-w-full transition-all duration-200 hover:shadow-xl ${
+                          isMyMessage
+                            ? "bg-gradient-to-br from-primary to-primary-focus text-primary-content rounded-bl-md"
+                            : "bg-base-100 text-base-content border border-base-300 rounded-br-md"
+                        }`}
+                      >
+                        {/* Message content */}
+                        {message.content.startsWith('/uploads/') ? (
+                          <div className="rounded-xl overflow-hidden border border-base-300">
+                            <img
+                              src={`http://localhost:5001${message.content}`}
+                              alt="Shared image"
+                              className="max-w-full h-auto rounded-xl max-w-[300px] sm:max-w-sm"
+                              loading="lazy"
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-sm sm:text-base leading-relaxed break-words whitespace-pre-wrap">
+                            {message.content}
+                          </p>
+                        )}
+
+                        {/* Time and status */}
+                        <div className={`flex items-center justify-end mt-2 space-x-1.5 ${isMyMessage ? "text-primary-content opacity-80" : "text-base-content opacity-60"}`}>
+                          <span className="text-xs font-medium">
+                            {new Date(message.createdAt).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                          {isMyMessage && (
+                            <svg className="w-3.5 h-3.5 opacity-90" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-          
+              );
+            })
+          )}
+
           {/* Scroll to bottom spacer */}
-          <div className="h-4"></div>
+          <div className="h-6"></div>
           <div ref={messagesEndRef} />
         </div>
     
-        {/* Message Input - Telegram Style */}
-        <div className="border-t border-base-300 bg-base-100 px-2 sm:px-3 lg:px-4 py-2 sm:py-3 safe-area-inset-bottom flex-shrink-0">
-          <form onSubmit={sendMessage} className="flex items-end space-x-2 sm:space-x-3">
+        {/* Message Input - Enhanced mobile-friendly design */}
+        <div className="border-t border-base-300 bg-gradient-to-t from-base-100 to-base-200 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 safe-area-inset-bottom flex-shrink-0 shadow-lg">
+          <form onSubmit={sendMessage} className="flex items-end space-x-3 sm:space-x-4">
             {/* File Upload Button */}
             <input
               type="file"
@@ -402,9 +412,9 @@ const ChatPage = () => {
             />
             <label
               htmlFor="imageUpload"
-              className={`flex-shrink-0 p-1.5 sm:p-2 text-base-content opacity-60 hover:text-primary cursor-pointer transition-colors rounded-full hover:bg-base-200 touch-target min-w-[44px] min-h-[44px] flex items-center justify-center ${isUploading ? 'opacity-30' : ''}`}
+              className={`flex-shrink-0 p-2.5 sm:p-3 text-base-content opacity-60 hover:text-primary cursor-pointer transition-all duration-200 rounded-full hover:bg-base-200 active:bg-base-300 touch-target min-w-[48px] min-h-[48px] flex items-center justify-center hover:scale-105 active:scale-95 ${isUploading ? 'opacity-30 cursor-not-allowed' : ''}`}
             >
-              <Image className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Image className="w-5 h-5 sm:w-6 sm:h-6" />
             </label>
 
             {/* Message Input Container */}
@@ -414,26 +424,36 @@ const ChatPage = () => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-base-200 border border-base-300 rounded-2xl sm:rounded-3xl text-base text-base-content placeholder-base-content placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none max-h-24 sm:max-h-32 leading-5 touch-target"
+                className="w-full px-4 py-3 sm:px-5 sm:py-4 bg-base-200 border border-base-300 rounded-3xl text-base text-base-content placeholder-base-content placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-base-100 transition-all duration-200 resize-none max-h-24 sm:max-h-32 leading-6 touch-target shadow-sm"
                 style={{ fontSize: '16px' }} // Prevent zoom on iOS
                 disabled={isUploading}
               />
+              {/* Typing indicator */}
+              {newMessage.trim() && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="flex space-x-1">
+                    <div className="w-1 h-1 bg-primary rounded-full animate-bounce"></div>
+                    <div className="w-1 h-1 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-1 h-1 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Send Button */}
             <button
               type="submit"
               disabled={!newMessage.trim() || isUploading}
-              className={`flex-shrink-0 p-2 sm:p-2.5 lg:p-3 rounded-full transition-all duration-200 touch-target min-w-[44px] min-h-[44px] flex items-center justify-center ${
+              className={`flex-shrink-0 p-3 sm:p-4 rounded-full transition-all duration-300 touch-target min-w-[48px] min-h-[48px] flex items-center justify-center shadow-lg ${
                 newMessage.trim() && !isUploading
-                  ? 'bg-primary text-primary-content hover:bg-primary-focus scale-100'
-                  : 'bg-base-300 text-base-content opacity-50 scale-95'
+                  ? 'bg-gradient-to-r from-primary to-primary-focus text-primary-content hover:from-primary-focus hover:to-primary hover:scale-105 active:scale-95 hover:shadow-xl'
+                  : 'bg-base-300 text-base-content opacity-50 scale-95 cursor-not-allowed'
               }`}
             >
               {isUploading ? (
-                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Send className="w-5 h-5 sm:w-6 sm:h-6" />
               )}
             </button>
           </form>
