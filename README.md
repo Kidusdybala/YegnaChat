@@ -1,7 +1,5 @@
 # YegnaChat 🌟
 
-![YegnaChat Logo](frontend/public/Logo.png)
-
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.9.3-green.svg)](https://www.mongodb.com/)
@@ -37,10 +35,9 @@ YegnaChat was created with the Ethiopian diaspora and local communities in mind.
 #### Chat Interface
 ![Chat Interface](frontend/public/Screenshot%202025-09-01%20225416.png)
 
-#### User Dashboard
 ![User Dashboard](frontend/public/Screenshot%202025-09-01%20232658.png)
 
-#### Mobile Experience
+#### chat page
 ![Mobile Experience](frontend/public/Screenshot%202025-09-03%20013817.png)
 
 ### 🎨 UI/UX Features
