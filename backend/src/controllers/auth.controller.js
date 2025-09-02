@@ -14,9 +14,9 @@ const router = express.Router();
 export function Logout(req, res) {
   res.clearCookie("jwt", {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production"
-  }); // Clear JWT cookie with same settings
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
+  }); // Clear JWT cookie with environment-appropriate settings
   res.status(200).json({ message: "Logged out successfully" });
 }
 
@@ -54,8 +54,10 @@ export async function Login(req, res) {
     // Set token in cookie (optional, or send in response)
     res.cookie("jwt", token, {
       httpOnly: true,
-      sameSite: "lax", // More compatible with mobile browsers
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // allow cross-site cookies in production
       secure: process.env.NODE_ENV === "production",
+      // If you serve API on a different subdomain or domain, consider setting cookie domain explicitly via process.env.COOKIE_DOMAIN
+      domain: process.env.COOKIE_DOMAIN || undefined,
       maxAge: 7 * 24 * 60 * 60 * 1000
     }); // 7 days in ms
     res.status(201).json({ success:true, user:user});
@@ -98,7 +100,6 @@ export async function Signup(req, res) {
     if (password.length < 4 || password.length > 15) {
       return res.status(400).json({ message: "Password must be between 4 and 15 characters" });
     }
-
     // Check for existing user (unique email)
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -124,7 +125,6 @@ export async function Signup(req, res) {
 
     // Generate verification code
     const verificationCode = generateVerificationCode();
-
     // Create new user (not verified yet)
     const user = new User({
       email,
@@ -138,12 +138,12 @@ export async function Signup(req, res) {
     });
     
     await user.save();
-    console.log('✅ User created successfully:', user.email);
+    console.log(' User created successfully:', user.email);
 
     // Send email asynchronously (DO NOT await - this prevents hanging)
     sendVerificationEmail(email, verificationCode, fullName)
-      .then(() => console.log('✅ Verification email sent to:', email))
-      .catch(error => console.error('❌ Email send failed:', error));
+      .then(() => console.log(' Verification email sent to:', email))
+      .catch(error => console.error(' Email send failed:', error));
 
     // Return response immediately
     res.status(201).json({
@@ -154,15 +154,13 @@ export async function Signup(req, res) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 }
-export async function onboard(req, res) {
+export async function editprofile(req, res) {
   try {
     const userId = req.user.id;
     const {
       fullName,
       bio,
     } = req.body;
-
-    // Update validation to not require language fields
     if (!fullName || !bio) {
       return res.status(400).json({
         message: "All fields are required",
@@ -183,17 +181,15 @@ export async function onboard(req, res) {
       return res.status(404).json({ message: "User not found" });
     }
 
-
     return res.status(200).json({
       message: "User updated successfully",
       user: updatedUser,
     });
   } catch (error) {
-    console.error("editprofile error:", error);
+    console.error("error updating the user profile:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 }
-
 // Change Password Handler
 export async function changePassword(req, res) {
   try {
@@ -206,7 +202,6 @@ export async function changePassword(req, res) {
         message: "Current password and new password are required"
       });
     }
-
     // Validate new password length
     if (newPassword.length < 4 || newPassword.length > 15) {
       return res.status(400).json({
@@ -233,13 +228,9 @@ export async function changePassword(req, res) {
         message: "New password must be different from current password"
       });
     }
-
     // Update password (the pre-save middleware will hash it)
     user.password = newPassword;
     await user.save();
-
-
-
     return res.status(200).json({
       message: "Password changed successfully"
     });
@@ -249,7 +240,6 @@ export async function changePassword(req, res) {
     res.status(500).json({ message: "Internal server error" });
   }
 }
-
 // Email Verification Handler
 export async function verifyEmail(req, res) {
   try {
@@ -261,20 +251,17 @@ export async function verifyEmail(req, res) {
         message: "Email and verification code are required"
       });
     }
-
     // Find user with matching email and verification code
     const user = await User.findOne({ 
       email,
       emailVerificationCode: code,
       emailVerificationExpires: { $gt: new Date() }
     });
-
     if (!user) {
       return res.status(400).json({
         message: "Invalid or expired verification code"
       });
     }
-
     // Verify the user
     user.isEmailVerified = true;
     user.emailVerificationCode = null;
@@ -291,11 +278,7 @@ export async function verifyEmail(req, res) {
     } catch (error) {
       console.error(`Error upserting user ${user._id}:`, error);
     }
-
     await user.save();
-
-
-
     return res.status(200).json({
       message: "Email verified successfully! You can now log in."
     });
@@ -316,13 +299,11 @@ export async function resendVerificationCode(req, res) {
         message: "Email is required"
       });
     }
-
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
     if (user.isEmailVerified) {
       return res.status(400).json({ message: "Email is already verified" });
     }
@@ -394,7 +375,6 @@ export async function forgotPassword(req, res) {
     res.status(500).json({ message: "Internal server error" });
   }
 }
-
 // Reset Password Handler
 export async function resetPassword(req, res) {
   try {
@@ -406,14 +386,12 @@ export async function resetPassword(req, res) {
         message: "Email, verification code, and new password are required"
       });
     }
-
     // Validate password length
     if (password.length < 4 || password.length > 15) {
       return res.status(400).json({
         message: "Password must be between 4 and 15 characters long"
       });
     }
-
     // Find user with valid reset code
     const user = await User.findOne({
       email,
@@ -426,16 +404,11 @@ export async function resetPassword(req, res) {
         message: "Invalid or expired reset code"
       });
     }
-
     // Update password
     user.password = password;
     user.passwordResetCode = null;
     user.passwordResetCodeExpires = null;
-
     await user.save();
-
-
-
     return res.status(200).json({
       message: "Password reset successfully! You can now log in with your new password."
     });

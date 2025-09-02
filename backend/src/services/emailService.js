@@ -6,9 +6,9 @@ import { Resend } from 'resend';
 const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const getFromAddress = () => {
   // IMPORTANT: Resend cannot send as @gmail.com unless you own and verify that domain.
-  // Use a verified custom domain or the default onboarding sender for testing.
+  // Use a verified custom domain or the default editprofileing sender for testing.
   // Configure EMAIL_FROM in env (e.g., "YegnaChat <no-reply@yegnachat.app>") once your domain is verified.
-  return process.env.EMAIL_FROM || 'onboarding@resend.dev';
+  return process.env.EMAIL_FROM || 'editprofileing@resend.dev';
 };
 
 // Try sending via Resend (HTTPS) — works on Railway

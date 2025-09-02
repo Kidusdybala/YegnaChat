@@ -36,33 +36,24 @@ export async function getStreamToken(req, res) {
     });
   }
 }
-
 // Create or get a Stream chat channel
 export async function createOrGetStreamChat(req, res) {
   try {
     const { userId } = req.body;
     const currentUserId = req.user.id;
-
-
-
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
-
     // Check if users are friends
     const currentUser = await User.findById(currentUserId);
-
-
     if (!currentUser.friends.includes(userId)) {
       return res.status(403).json({ message: "You can only chat with friends. Please send and accept a friend request first." });
     }
-
     // Get user details for both participants
     const otherUser = await User.findById(userId);
     if (!otherUser) {
       return res.status(404).json({ message: "User not found" });
     }
-
     // Create or update Stream users
     await upsertStreamUser({
       id: currentUserId,
