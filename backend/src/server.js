@@ -28,6 +28,9 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Trust proxy for rate limiting behind reverse proxy (Render)
+app.set('trust proxy', 1);
+
 // Create HTTP server
 const server = createServer(app);
 
