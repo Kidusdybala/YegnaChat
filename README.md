@@ -32,13 +32,13 @@ YegnaChat was created with the Ethiopian diaspora and local communities in mind.
 
 ###  Screenshots
 
-#### Chat Interface
-![Chat Interface](frontend/public/Screenshot%202025-09-01%20225416.png)
+#### Home page Interface
+![Home Page Interface](frontend/public/Screenshot%202025-09-01%20225416.png)
 
-![User Dashboard](frontend/public/Screenshot%202025-09-01%20232658.png)
+![Settings Page](frontend/public/Screenshot%202025-09-01%20232658.png)
 
 #### chat page
-![Mobile Experience](frontend/public/Screenshot%202025-09-03%20013817.png)
+![Chat page](frontend/public/Screenshot%202025-09-03%20013817.png)
 
 ###  UI/UX Features
 - **Modern Design**: Beautiful interface with DaisyUI and Tailwind CSS
